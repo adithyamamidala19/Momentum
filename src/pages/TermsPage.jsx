@@ -4,15 +4,17 @@ import { ArrowLeft, BookOpen, Heart, Scale } from 'lucide-react';
 export default function TermsPage({ setView }) {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16 space-y-8 select-none">
-      <div className="space-y-2">
-        <button
-          type="button"
-          onClick={() => setView('home')}
-          className="inline-flex items-center gap-1.5 text-xs text-outline hover:text-on-surface transition-colors cursor-pointer mb-2"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Sanctuary</span>
-        </button>
+      <div className="flex flex-col items-start gap-1">
+        <div>
+          <button
+            type="button"
+            onClick={() => setView('home')}
+            className="inline-flex items-center gap-1.5 text-xs text-outline hover:text-on-surface transition-colors cursor-pointer mb-3"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Sanctuary</span>
+          </button>
+        </div>
         <span className="text-[10px] uppercase font-bold tracking-widest text-primary-container">
           Agreement & Mindful Conduct
         </span>

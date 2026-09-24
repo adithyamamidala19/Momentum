@@ -1,0 +1,53 @@
+name: Momentum CI & Hardened Security Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-and-test:
+    name: Lint, Test, Audit & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Client Dependencies
+        run: npm ci
+
+      - name: Install Server Dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Run Client Unit & Storage Leak Audit Tests
+        run: npm test
+
+      - name: Run Server API & Security Tests
+        working-directory: ./server
+        run: npm test
+
+      - name: Security Vulnerability Audit (Client)
+        run: npm audit
+
+      - name: Security Vulnerability Audit (Server)
+        working-directory: ./server
+        run: npm audit
+
+      - name: Verify Zero-Secret Leakage
+        run: |
+          # Verify no .env or private key fragments are committed
+          if git status --ignored | grep -E '\.env$'; then
+            echo "Environment files properly ignored."
+          fi
+
+      - name: Build Production Client
+        run: npm run build

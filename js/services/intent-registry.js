@@ -1,4 +1,4 @@
--/**
+/**
  * Momentum — Aria Intent Registry & Local NLU Pattern Library
  * ─────────────────────────────────────────────────────────────────────────────
  * Declarative intent definitions, multi-turn slot configurations, custom parsers,

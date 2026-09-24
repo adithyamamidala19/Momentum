@@ -28,7 +28,7 @@ import SignInPage from './pages/SignInPage.jsx';
 import PrivacyPage from './pages/PrivacyPage.jsx';
 import TermsPage from './pages/TermsPage.jsx';
 
-// STRICT COMPLIANCE: Zero sessionStorage or localStorage. In-memory flag only.
+// STRICT COMPLIANCE: Zero storage usage; in-memory flag only.
 let loaderSeenInMemory = false;
 
 const PUBLIC_VIEWS = ['home', 'signin', 'privacy', 'terms'];

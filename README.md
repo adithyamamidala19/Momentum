@@ -1,98 +1,177 @@
-# Momentum — Mindful Habit & Daily Rhythm Sanctuary
+# Momentum — Mindful Habit Sanctuary & Daily Rhythm Platform
 
-Momentum is a modern, modular, high-performance mindful habit tracker built with vanilla HTML, CSS, and ES Modules. It features concentric circular progress rings, realistic 3D specular medals, native SVG Catmull-Rom spline curves, a Web Audio API harmonic soundscape synthesizer, smart quiet-hours reminders with calm escalation banners, a grounded AI assistant, and a natural language voice agent.
+[![CI Pipeline](https://github.com/momentum-mindful-habits/momentum/actions/workflows/ci.yml/badge.svg)](https://github.com/momentum-mindful-habits/momentum/actions/workflows/ci.yml)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Momentum is a production-grade full-stack mindful habit tracker, rhythm sanctuary, and wellness companion. Built with a React 19 + Framer Motion frontend, a hardened Node.js/Express API, MongoDB Atlas as the single source of truth, and Firebase Google Sign-In with server-issued httpOnly session cookies.
 
 ---
 
-## 📁 Project Architecture
+## 🏛️ System Architecture
 
-```
-├── index.html                  # Clean semantic HTML application shell
-├── manifest.json               # Progressive Web App (PWA) manifest
-├── package.json                # Project scripts, metadata, and dev tooling
-├── tailwind.config.js          # Tailwind CSS theme, typography & color system
-├── postcss.config.js           # PostCSS configuration with Tailwind & Autoprefixer
-├── jsconfig.json               # JavaScript ES2022+ module & path aliases configuration
-├── .eslintrc.json              # ESLint rules for modern ES Modules
-├── .prettierrc                 # Code formatting standards
-├── .prettierignore             # Prettier ignore rules
-├── .gitignore                  # Git ignore rules for node_modules and builds
-├── firebase.json               # Firebase Hosting & Firestore configuration
-├── firestore.rules             # Firestore security rules
-├── firestore.indexes.json      # Firestore query indexes
-├── css/
-│   ├── global.css              # Base resets, typography, tokens & hairlines
-│   ├── loader.css              # Initial reveal & relaxing welcome loaders
-│   ├── components.css          # Habit cards, pills, drawers, sheets, modals
-│   ├── medals.css              # 3D realistic medal cards & flip animations
-│   ├── focus.css               # Meditative focus timer & earphones intro
-│   └── voice-agent.css         # Voice FAB, wave visualizer & 10s undo toast
-└── js/
-    ├── app.js                  # Root application orchestrator & lifecycle bootstrap
-    ├── storage.js              # Persistence keys & safe local storage engine
-    ├── state.js                # State singletons & dynamic adherence scoring
-    ├── router.js               # Route guards, hash routing & view transitions
-    ├── services/
-    │   ├── firebase.js         # Real-time Firestore sync & Auth engine
-    │   ├── soundscape.js       # Web Audio API harmonic soundscape synthesizer
-    │   ├── assistant.js        # Grounded AI assistant bot (zero hallucination)
-    │   ├── voice-agent.js      # STT/TTS engine & Chrono NLP date parser
-    │   └── reminders.js        # Calm escalation ladder & quiet hours engine
-    ├── components/
-    │   ├── rhythm-chart.js     # Native SVG spline chart & hover tooltips
-    │   └── medals.js           # 3D sheen tracking & milestone share modal
-    └── pages/
-        ├── onboarding.js       # 3-step personalization flow
-        ├── auth.js             # Sign-in/Sign-up tabs & Google login
-        ├── today.js            # Concentric rings dashboard & water tracker
-        ├── rituals.js          # Custom habits CRUD & suggestion drawer
-        ├── insights.js         # 30-day calendar & analytics engine
-        ├── profile.js          # Profile preferences & Zen breathing breaks
-        ├── focus.js            # Focus session countdown orchestrator
-        └── movement.js         # Workout logging & sets/reps tracker
+```mermaid
+flowchart TD
+    subgraph Client ["Client Tier (React 19 + Vite)"]
+        UI["Mindful UI (Cream / Forest Green / Newsreader)"]
+        CTX["MomentumContext (100% In-Memory State)"]
+        API_CLIENT["apiClient.js (credentials: 'include', Cache-Control: 'no-store')"]
+        FB_AUTH["firebaseClient.js (inMemoryPersistence, ephemeral ID token)"]
+        PURGE["storagePurge.js (Wipes legacy localStorage/sessionStorage/IndexedDB on boot)"]
+    end
+
+    subgraph Security ["Hardened Defense Perimeter"]
+        HELMET["Helmet (Strict CSP, HSTS, No-Sniff, Frame-Deny)"]
+        RATE["Rate Limiters (Global, Auth, Vision Scan, Aria)"]
+        CSRF["CSRF Protection (Double-Submit Token + SameSite: Lax)"]
+        SANITIZE["Mongo Sanitize (NoSQL Operator Stripping)"]
+    end
+
+    subgraph Server ["API Server (Node.js / Express)"]
+        AUTH_CTRL["Auth Controller (Session Cookie Issuance & Revocation)"]
+        METRICS_SRV["Metrics Service (Server-Computed Streaks & Adherence)"]
+        CHALLENGE_SRV["Challenge Service (MongoDB Aggregation, Zero Synthetic Bots)"]
+        VISION_SRV["AI Scan Service (Gemini Vision with Server Key & Magic Bytes)"]
+        EXPORT_SRV["GDPR Service (Portable JSON Archive & Cascade Hard-Deletion)"]
+    end
+
+    subgraph Data ["Persistence & Identity"]
+        MONGO[("MongoDB Atlas (Mongoose: 14 Strict Schemas & Compound Indexes)")]
+        FB_ADMIN["Firebase Admin SDK (Identity Verification & checkRevoked)"]
+    end
+
+    UI --> CTX
+    CTX --> API_CLIENT
+    API_CLIENT --> HELMET
+    HELMET --> RATE --> CSRF --> SANITIZE
+    SANITIZE --> AUTH_CTRL & METRICS_SRV & CHALLENGE_SRV & VISION_SRV & EXPORT_SRV
+    AUTH_CTRL <--> FB_ADMIN
+    AUTH_CTRL & METRICS_SRV & CHALLENGE_SRV & EXPORT_SRV <--> MONGO
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🔒 Security & Privacy Highlights
 
-### Local Development
+- **Zero Client-Side Storage:** Strictly zero user data in `localStorage`, `sessionStorage`, `IndexedDB`, or JS-readable cookies. All data lives in-memory while active and persists solely in MongoDB Atlas. Verified via `npm test` AST scan and runtime DevTools inspection.
+- **Server-Issued Session Cookies:** Firebase ID tokens are ephemeral and exchanged immediately via `POST /api/auth/session` for a cryptographic `httpOnly`, `Secure`, `SameSite=Lax` cookie with `checkRevoked: true`.
+- **Never Trust Client Metrics:** Adherence rates (excluding rest/skipped days from denominator: `completed / (total - skipped)`), streaks, practice scores, and weekly challenge rankings are computed strictly server-side from raw log documents.
+- **Strict Input Validation & Sanitization:** All payload inputs validated with strict Zod schemas rejecting unknown fields; `express-mongo-sanitize` prevents NoSQL injection attacks.
+- **GDPR Ready:** Full data portability (`GET /api/profile/export`) and irreversible account cascade deletion (`DELETE /api/profile/account`) across all 14 database collections.
 
-Run the local development server on port 3000:
+---
+
+## 📂 Codebase Directory Layout
+
+```
+├── .github/workflows/ci.yml    # Automated CI (lint, tests, audit, build)
+├── docker-compose.yml          # Multi-container orchestration (API + MongoDB)
+├── docs/                       # Architectural documentation & migration inventory
+│   └── PHASE_0_INVENTORY.md    # Legacy keys and API mapping
+├── server/                     # Backend Node/Express API Server
+│   ├── Dockerfile              # Multi-stage hardened alpine container
+│   ├── app.js                  # Express middleware pipeline assembly
+│   ├── server.js               # HTTP server entrypoint & graceful shutdown
+│   ├── scripts/                # Database maintenance (seed, createIndexes)
+│   ├── src/
+│   │   ├── config/             # Environment, Database, Firebase, Score weights
+│   │   ├── controllers/        # Route handlers for all 12 feature domains
+│   │   ├── middleware/         # Security headers, auth, rate limiting, csrf, errors
+│   │   ├── models/             # 14 Mongoose models with strict schemas
+│   │   ├── routes/             # RESTful API route declarations
+│   │   ├── services/           # Metrics, Challenge aggregation, AI Vision, Export
+│   │   └── utils/              # Pino logger, magic-byte validator
+│   └── tests/                  # Node native test suites (security, metrics, deletion)
+├── src/                        # Frontend React 19 Application
+│   ├── components/             # Reusable UI widgets, modals, layout, soundscapes
+│   ├── context/                # In-memory AuthContext and MomentumContext
+│   ├── pages/                  # Route views (Today, To-Dos, Voice, Rituals, Focus, etc.)
+│   ├── services/               # apiClient.js, firebaseClient.js, storagePurge.js
+│   ├── motionConfig.js         # Apple/Awwwards-grade motion curves and springs
+│   ├── App.jsx                 # View router and layout shell
+│   └── main.jsx                # Application bootstrapper with storage purge
+├── tests/                      # Frontend unit & storage leak audit tests
+├── SECURITY_REPORT.md          # Threat model & vulnerability scan findings
+├── UI_AUDIT.md                 # Accessibility & motion design evaluation
+└── LAUNCH_CHECKLIST.md         # Production deployment runbook
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **MongoDB**: Local MongoDB instance or MongoDB Atlas cluster URI
+- **Firebase Project**: Google Sign-In enabled with Web App credentials and Admin Service Account key
+
+### 2. Environment Setup
+Copy the environment template files and provide your secrets:
+```bash
+# Frontend environment
+cp .env.example .env
+
+# Backend server environment
+cp server/.env.example server/.env
+```
+
+### 3. Install Dependencies
+```bash
+# Install frontend dependencies
+npm install
+
+# Install server dependencies
+cd server && npm install && cd ..
+```
+
+### 4. Running the Development Environment
+Run backend API server:
+```bash
+cd server
+npm run dev
+# Starts on http://localhost:5000
+```
+
+In a separate terminal, run the Vite frontend:
+```bash
+npm run dev
+# Starts on http://localhost:3000
+```
+
+### 5. Running with Docker Compose
+```bash
+docker-compose up --build
+```
+
+---
+
+## 🧪 Testing & Verification
 
 ```bash
-# Using npm
-npm start
+# 1. Run client unit tests & storage leak verification (AST check)
+npm test
 
-# Or using npx serve directly
-npx serve -l 3000 .
+# 2. Run server API, security, and timezone calculation tests
+cd server && npm test
+
+# 3. Security audits (Zero vulnerabilities)
+npm audit
+cd server && npm audit
+
+# 4. Production build
+npm run build
 ```
 
-Open `http://localhost:3000` in your web browser.
-
 ---
 
-## 🛠️ Tooling & Scripts
+## 📑 Documentation Index
 
-| Command | Description |
-| :--- | :--- |
-| `npm start` / `npm run dev` | Starts local HTTP server on port `3000` |
-| `npm run lint` | Runs ESLint on all modular JavaScript files in `js/` |
-| `npm run format` | Formats code with Prettier |
-| `npm run build:css` | Compiles CSS via Tailwind CLI (optional) |
-| `npm run deploy` | Deploys to Firebase Hosting |
-
----
-
-## ☁️ Firebase Cloud Sync & Security
-
-Momentum includes local-first offline storage by default with seamless real-time cloud synchronization via Firebase Firestore:
-- **Hosting Configuration**: [`firebase.json`](./firebase.json)
-- **Security Rules**: [`firestore.rules`](./firestore.rules)
-- **Project Configuration**: Can be configured directly through the in-app Firebase Settings modal or stored in `localStorage`.
+- [Security & Threat Model Audit](SECURITY_REPORT.md)
+- [UI/UX & Accessibility Audit](UI_AUDIT.md)
+- [Production Launch Checklist](LAUNCH_CHECKLIST.md)
+- [Phase 0 Migration Inventory](docs/PHASE_0_INVENTORY.md)
 
 ---
 
 ## 📄 License
-
 MIT License. Designed with mindful care.

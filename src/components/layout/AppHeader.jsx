@@ -17,11 +17,13 @@ import {
   FlameKindling
 } from 'lucide-react';
 import { useMomentum } from '../../context/MomentumContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { EASE } from '../../motionConfig';
 import { titleCaseName, pluralize } from '../../utils/formatters.js';
 
 export default function AppHeader({ currentView, setView, loaderDone = true }) {
   const { state, metrics } = useMomentum();
+  const { user, logout } = useAuth();
   const prefersReduced = useReducedMotion();
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
@@ -200,33 +202,51 @@ export default function AppHeader({ currentView, setView, loaderDone = true }) {
 
         {/* ── Profile Chip with Dropdown ── */}
         <div className="relative" ref={profileRef}>
-          <button
-            type="button"
-            onClick={() => setProfileDropdownOpen(prev => !prev)}
-            aria-expanded={profileDropdownOpen}
-            aria-haspopup="true"
-            className={`flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full hairline cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container ${
-              currentView === 'profile' || profileDropdownOpen
-                ? 'bg-primary-container text-white border-primary-container shadow-xs'
-                : 'bg-surface-container-lowest hover:bg-surface-container text-on-surface'
-            }`}
-          >
-            <div className="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary-container text-xs font-bold overflow-hidden shadow-xs">
-              {firstName.charAt(0)}
-            </div>
-            <span className="text-xs font-semibold whitespace-nowrap">
-              {firstName}
-            </span>
-            <ChevronDown
-              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                profileDropdownOpen ? 'rotate-180' : ''
+          {!user ? (
+            <button
+              type="button"
+              onClick={() => setView('signin')}
+              className="py-1.5 px-4 rounded-full bg-primary-container hover:bg-primary-container-hover text-white text-xs font-semibold cursor-pointer border-0 shadow-xs transition-all"
+            >
+              Sign In
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setProfileDropdownOpen(prev => !prev)}
+              aria-expanded={profileDropdownOpen}
+              aria-haspopup="true"
+              className={`flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full hairline cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container ${
+                currentView === 'profile' || profileDropdownOpen
+                  ? 'bg-primary-container text-white border-primary-container shadow-xs'
+                  : 'bg-surface-container-lowest hover:bg-surface-container text-on-surface'
               }`}
-            />
-          </button>
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || 'User'}
+                  className="w-7 h-7 rounded-full object-cover shadow-xs"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary-container text-xs font-bold overflow-hidden shadow-xs">
+                  {firstName.charAt(0)}
+                </div>
+              )}
+              <span className="text-xs font-semibold whitespace-nowrap">
+                {firstName}
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  profileDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+          )}
 
           {/* Profile Dropdown Card */}
           <AnimatePresence>
-            {profileDropdownOpen && (
+            {user && profileDropdownOpen && (
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -235,15 +255,23 @@ export default function AppHeader({ currentView, setView, loaderDone = true }) {
                 className="absolute right-0 mt-2 w-64 p-4 rounded-2xl bg-surface-container-lowest hairline shadow-2xl z-50 text-left"
               >
                 <div className="flex items-center gap-3 pb-3 border-b border-surface-container">
-                  <div className="w-10 h-10 rounded-full bg-primary-fixed text-primary-container font-bold text-sm flex items-center justify-center shrink-0">
-                    {firstName.charAt(0)}
-                  </div>
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'}
+                      className="w-10 h-10 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary-fixed text-primary-container font-bold text-sm flex items-center justify-center shrink-0">
+                      {firstName.charAt(0)}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-on-surface truncate">
-                      {fullName}
+                      {user.displayName || fullName}
                     </p>
                     <p className="text-[10px] text-outline truncate">
-                      {state.email || 'Mindful habit sanctuary'}
+                      {user.email || 'Mindful habit sanctuary'}
                     </p>
                   </div>
                 </div>
@@ -269,7 +297,7 @@ export default function AppHeader({ currentView, setView, loaderDone = true }) {
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-1.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -280,6 +308,16 @@ export default function AppHeader({ currentView, setView, loaderDone = true }) {
                   >
                     <span>Sanctuary Settings</span>
                     <ExternalLink className="w-3.5 h-3.5 text-outline" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      setProfileDropdownOpen(false);
+                    }}
+                    className="w-full py-2 px-3 rounded-xl hover:bg-red-50 text-xs font-medium text-red-700 flex items-center justify-between cursor-pointer border-0 transition-colors"
+                  >
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </motion.div>

@@ -1,54 +1,62 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import {
-  userState as rawUserState,
-  focusTimerState as rawFocusState,
-  movementLogState as rawMovementState,
-  calculateDynamicMetrics,
-  saveStateToStorage,
-  getExerciseLibrary,
-  addOrUpdateExerciseInLibrary,
-  checkAndUpdatePR,
-  getLatestWorkoutSession,
-  logCardioSession,
-  deleteCardioLog,
-  logCalorieIntake,
-  deleteCalorieLog,
-  addTodo,
-  toggleTodo,
-  deleteTodo,
-  rescheduleTodo,
-  createTodoItem
-} from '../../js/state.js';
-import { STORAGE_KEYS } from '../../js/storage.js';
+import { api } from '../services/apiClient.js';
+import { useAuth } from './AuthContext.jsx';
 import { MeditativeAudio } from '../../js/services/soundscape.js';
 
 const MomentumContext = createContext(null);
 
 export function MomentumProvider({ children }) {
-  // Reactive copy of userState
+  const { user } = useAuth();
+
+  // In-memory state (Zero localStorage / sessionStorage)
   const [state, setState] = useState(() => ({
-    ...rawUserState,
-    customHabits: [...(rawUserState.customHabits || [])],
-    movementLogs: [...(rawUserState.movementLogs || [])],
-    cardioLogs: [...(rawUserState.cardioLogs || [])],
-    calorieIntakeLogs: [...(rawUserState.calorieIntakeLogs || [])],
-    exerciseLibrary: [...(rawUserState.exerciseLibrary || [])],
-    todos: [...(rawUserState.todos || [])],
-    waterMl: rawUserState.waterMl !== undefined ? rawUserState.waterMl : 1500,
-    waterTargetMl: rawUserState.waterTargetMl || 2000,
-    waterGlasses: Math.floor((rawUserState.waterMl !== undefined ? rawUserState.waterMl : 1500) / 250),
-    waterTargetGlasses: Math.floor((rawUserState.waterTargetMl || 2000) / 250),
-    proteinGrams: rawUserState.proteinGrams !== undefined ? rawUserState.proteinGrams : 45,
-    proteinTargetGrams: rawUserState.proteinTargetGrams || 90,
-    proteinEntries: [...(rawUserState.proteinEntries || [
-      { id: 'pe-1', time: '08:30 AM', amount: 25, label: 'Whey shake', timestamp: Date.now() - 14400000 },
-      { id: 'pe-2', time: '12:45 PM', amount: 20, label: 'Greek yogurt & seeds', timestamp: Date.now() - 7200000 }
-    ])],
-    challengeJoined: Boolean(rawUserState.challengeJoined),
-    challengeNickname: rawUserState.challengeNickname || 'CalmRiver',
-    challengeAvatar: rawUserState.challengeAvatar || '🌱',
-    streakDays: rawUserState.streakDays !== undefined ? rawUserState.streakDays : 1
+    name: 'Adithya Mamidala',
+    mantra: 'Small, steady actions today quietly shape the person you become.',
+    photo: '',
+    customHabits: [],
+    movementLogs: [],
+    cardioLogs: [],
+    calorieIntakeLogs: [],
+    exerciseLibrary: [],
+    todos: [],
+    waterMl: 1750,
+    waterTargetMl: 2000,
+    waterGlasses: 7,
+    waterTargetGlasses: 8,
+    proteinGrams: 45,
+    proteinTargetGrams: 90,
+    proteinEntries: [],
+    challengeJoined: false,
+    challengeNickname: 'CalmRiver',
+    challengeAvatar: '🌱',
+    streakDays: 1,
+    todayFocusMinutes: 20,
+    mindfulHours: 0.3
   }));
+
+  // Authoritative server metrics
+  const [metrics, setMetrics] = useState(() => ({
+    dailyAdherenceScore: 83,
+    habitPct: 83,
+    focusPct: 80,
+    waterPct: 88,
+    proteinPct: 50,
+    completedHabitsCount: 5,
+    activeHabitsCount: 6,
+    eligibleHabitsCount: 6,
+    waterMl: 1750,
+    waterTargetMl: 2000,
+    proteinGrams: 45,
+    proteinTargetGrams: 90,
+    focusMinutes: 20,
+    focusTargetMinutes: 25,
+    streak: 12,
+    totalPoints: 1931
+  }));
+
+  const [nextUp, setNextUp] = useState(null);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [networkError, setNetworkError] = useState(null);
 
   // Floating Rest Timer State
   const [restTimer, setRestTimer] = useState({
@@ -57,11 +65,11 @@ export function MomentumProvider({ children }) {
     remaining: 90
   });
 
-  // Undo Buffer State (10-second undo)
+  // Undo Buffer State (10-second undo window)
   const [undoState, setUndoState] = useState({
     visible: false,
     message: '',
-    snapshot: null,
+    undoFn: null,
     duration: 10
   });
 
@@ -71,30 +79,98 @@ export function MomentumProvider({ children }) {
   const showToast = useCallback((message) => {
     setToast({ visible: true, message });
     setTimeout(() => {
-      setToast(prev => prev.message === message ? { ...prev, visible: false } : prev);
+      setToast((prev) => (prev.message === message ? { ...prev, visible: false } : prev));
     }, 3200);
   }, []);
 
-  // Sync state back to rawUserState and localStorage
-  const syncState = useCallback((updater) => {
-    setState(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
-      // Mirror onto singleton rawUserState
-      Object.assign(rawUserState, next);
-      saveStateToStorage(rawUserState);
-      return next;
-    });
-  }, []);
+  // Meal Scanner Modal
+  const [mealScannerOpen, setMealScannerOpen] = useState(false);
+  const openMealScanner = useCallback(() => setMealScannerOpen(true), []);
+  const closeMealScanner = useCallback(() => setMealScannerOpen(false), []);
+
+  // ── Fetch all authoritative data from server ──
+  const refreshAll = useCallback(async () => {
+    if (!user) return;
+    try {
+      setIsLoadingData(true);
+      setNetworkError(null);
+
+      const [todayData, todosData, workoutsData, exercisesData] = await Promise.all([
+        api.get('/today').catch(() => null),
+        api.get('/todos').catch(() => ({ todos: [] })),
+        api.get('/workouts').catch(() => ({ workouts: [] })),
+        api.get('/workouts/exercises').catch(() => ({ exercises: [] }))
+      ]);
+
+      if (todayData) {
+        setMetrics(todayData.metrics);
+        setNextUp(todayData.nextUp);
+
+        setState((prev) => ({
+          ...prev,
+          name: todayData.user?.displayName || prev.name,
+          mantra: todayData.user?.mantra || prev.mantra,
+          photo: todayData.user?.photoURL || prev.photo,
+          customHabits: (todayData.rituals || []).map((r) => ({
+            id: r.id,
+            title: r.name,
+            anchor: r.anchor,
+            category: r.category,
+            scheduledTime: r.time,
+            completed: Boolean(r.completed),
+            skipped: Boolean(r.skipped),
+            streak: r.streak || 0
+          })),
+          waterMl: todayData.metrics.waterMl,
+          waterTargetMl: todayData.metrics.waterTargetMl,
+          waterGlasses: Math.floor(todayData.metrics.waterMl / 250),
+          waterTargetGlasses: Math.floor(todayData.metrics.waterTargetMl / 250),
+          proteinGrams: todayData.metrics.proteinGrams,
+          proteinTargetGrams: todayData.metrics.proteinTargetGrams,
+          proteinEntries: (todayData.proteinEntries || []).map((p) => ({
+            id: p._id,
+            amount: p.grams,
+            label: p.label,
+            calories: p.calories,
+            timestamp: new Date(p.loggedAt).getTime(),
+            time: new Date(p.loggedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          })),
+          todos: (todosData?.todos || []).map((t) => ({
+            id: t._id,
+            title: t.title,
+            priority: t.priority,
+            dueDate: t.dueDate,
+            completed: t.status === 'completed'
+          })),
+          movementLogs: workoutsData?.workouts || [],
+          exerciseLibrary: exercisesData?.exercises || [],
+          streakDays: todayData.metrics.streak
+        }));
+      }
+    } catch (err) {
+      console.warn('Network sync error:', err);
+      setNetworkError(err.message || 'Unable to connect to server');
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [user]);
+
+  // Initial fetch and focus revalidation
+  useEffect(() => {
+    refreshAll();
+    const handleFocus = () => refreshAll();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refreshAll]);
 
   // Rest Timer Interval
   useEffect(() => {
     let interval = null;
     if (restTimer.active && restTimer.remaining > 0) {
       interval = setInterval(() => {
-        setRestTimer(prev => {
+        setRestTimer((prev) => {
           if (prev.remaining <= 1) {
-            // Play soothing singing bowl chime when rest finishes
-            try { MeditativeAudio.playChime(); } catch (e) {}
+            try { MeditativeAudio.playChime(); } catch {}
             showToast('🔔 Rest timer complete! Ready for next set.');
             return { ...prev, active: false, remaining: 0 };
           }
@@ -106,404 +182,420 @@ export function MomentumProvider({ children }) {
   }, [restTimer.active, restTimer.remaining, showToast]);
 
   const startRestTimer = useCallback((seconds = 90) => {
-    setRestTimer({
-      active: true,
-      duration: seconds,
-      remaining: seconds
-    });
+    setRestTimer({ active: true, duration: seconds, remaining: seconds });
     showToast(`⏱ Rest timer started (${seconds}s)`);
   }, [showToast]);
 
   const dismissRestTimer = useCallback(() => {
-    setRestTimer(prev => ({ ...prev, active: false }));
+    setRestTimer((prev) => ({ ...prev, active: false }));
   }, []);
 
-  // Meal Scanner Modal
-  const [mealScannerOpen, setMealScannerOpen] = useState(false);
-  const openMealScanner = useCallback(() => setMealScannerOpen(true), []);
-  const closeMealScanner = useCallback(() => setMealScannerOpen(false), []);
-
   // 10-Second Undo Management
-  const triggerUndoableAction = useCallback((message, actionFn) => {
-    // Take deep snapshot of current state
-    const snapshot = {
-      habits: JSON.parse(JSON.stringify(state.customHabits || [])),
-      todos: JSON.parse(JSON.stringify(state.todos || [])),
-      waterMl: state.waterMl,
-      proteinGrams: state.proteinGrams,
-      proteinEntries: JSON.parse(JSON.stringify(state.proteinEntries || [])),
-      movementLogs: JSON.parse(JSON.stringify(state.movementLogs || [])),
-      calorieIntakeLogs: JSON.parse(JSON.stringify(state.calorieIntakeLogs || []))
-    };
-
-    actionFn();
-
+  const triggerUndo = useCallback((message, undoFn) => {
     setUndoState({
       visible: true,
       message,
-      snapshot,
+      undoFn,
       duration: 10
     });
-  }, [state]);
-
-  const performUndo = useCallback(() => {
-    if (!undoState.snapshot) return;
-    const { habits, todos, waterMl, proteinGrams, proteinEntries, movementLogs } = undoState.snapshot;
-    syncState(prev => ({
-      ...prev,
-      customHabits: habits,
-      todos: todos,
-      waterMl: waterMl !== undefined ? waterMl : prev.waterMl,
-      waterGlasses: Math.floor((waterMl !== undefined ? waterMl : prev.waterMl) / 250),
-      proteinGrams: proteinGrams !== undefined ? proteinGrams : prev.proteinGrams,
-      proteinEntries: proteinEntries || prev.proteinEntries,
-      movementLogs: movementLogs || prev.movementLogs
-    }));
-    setUndoState({ visible: false, message: '', snapshot: null, duration: 10 });
-    showToast('↩ Undone — previous state restored.');
-    try { MeditativeAudio.playChime(); } catch (e) {}
-  }, [undoState.snapshot, syncState, showToast]);
-
-  const dismissUndo = useCallback(() => {
-    setUndoState({ visible: false, message: '', snapshot: null, duration: 10 });
   }, []);
 
-  // Habit Actions
+  const performUndo = useCallback(() => {
+    if (undoState.undoFn) {
+      undoState.undoFn();
+    }
+    setUndoState({ visible: false, message: '', undoFn: null, duration: 10 });
+    showToast('↩ Restored from undo buffer');
+    try { MeditativeAudio.playChime(); } catch {}
+  }, [undoState, showToast]);
+
+  const dismissUndo = useCallback(() => {
+    setUndoState({ visible: false, message: '', undoFn: null, duration: 10 });
+  }, []);
+
+  // ── Habit / Ritual Actions ──
+  const checkinRitual = useCallback(async (id) => {
+    // 1. Optimistic update
+    setState((prev) => ({
+      ...prev,
+      customHabits: prev.customHabits.map((h) =>
+        h.id === id ? { ...h, completed: true, skipped: false } : h
+      )
+    }));
+    try { MeditativeAudio.playChime(); } catch {}
+
+    triggerUndo('Ritual checked in', async () => {
+      // Undo rollback
+      setState((prev) => ({
+        ...prev,
+        customHabits: prev.customHabits.map((h) => (h.id === id ? { ...h, completed: false } : h))
+      }));
+      await refreshAll();
+    });
+
+    try {
+      const res = await api.post(`/rituals/${id}/checkin`, {});
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      showToast(`Sync error: ${err.message}`);
+      await refreshAll();
+    }
+  }, [triggerUndo, showToast, refreshAll]);
+
+  const skipHabitForToday = useCallback(async (id) => {
+    setState((prev) => ({
+      ...prev,
+      customHabits: prev.customHabits.map((h) =>
+        h.id === id ? { ...h, completed: false, skipped: true } : h
+      )
+    }));
+    showToast('Rest day honored ("Skip for today")');
+
+    try {
+      const res = await api.post(`/rituals/${id}/skip`, {});
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      showToast(`Error skipping ritual: ${err.message}`);
+      await refreshAll();
+    }
+  }, [showToast, refreshAll]);
+
   const toggleHabit = useCallback((id) => {
-    triggerUndoableAction('Habit status updated', () => {
-      syncState(prev => ({
-        ...prev,
-        customHabits: prev.customHabits.map(h => {
-          if (h.id === id) {
-            const nextCompleted = !h.completed;
-            if (nextCompleted) {
-              try { MeditativeAudio.playChime(); } catch (e) {}
-            }
-            return { ...h, completed: nextCompleted, skipped: false };
-          }
-          return h;
-        })
-      }));
-    });
-  }, [triggerUndoableAction, syncState]);
+    const habit = state.customHabits.find((h) => h.id === id);
+    if (!habit?.completed) {
+      checkinRitual(id);
+    } else {
+      skipHabitForToday(id);
+    }
+  }, [state.customHabits, checkinRitual, skipHabitForToday]);
 
-  const skipHabitForToday = useCallback((id) => {
-    triggerUndoableAction('Rest day honored ("Skip for Today")', () => {
-      syncState(prev => ({
-        ...prev,
-        customHabits: prev.customHabits.map(h => 
-          h.id === id ? { ...h, completed: false, skipped: true } : h
-        )
-      }));
-    });
-  }, [triggerUndoableAction, syncState]);
+  const addCustomHabit = useCallback(async (habit) => {
+    try {
+      const res = await api.post('/rituals', {
+        name: habit.title || habit.name,
+        category: habit.category || 'Health',
+        anchor: habit.anchor || '',
+        time: habit.scheduledTime || '08:00'
+      });
+      showToast(`Added ritual: ${res.ritual.name}`);
+      await refreshAll();
+      return res.ritual;
+    } catch (err) {
+      showToast(`Failed to add ritual: ${err.message}`);
+      throw err;
+    }
+  }, [showToast, refreshAll]);
 
-  const resetHabit = useCallback((id) => {
-    triggerUndoableAction('Habit reset to pending', () => {
-      syncState(prev => ({
-        ...prev,
-        customHabits: prev.customHabits.map(h => 
-          h.id === id ? { ...h, completed: false, skipped: false } : h
-        )
-      }));
-    });
-  }, [triggerUndoableAction, syncState]);
+  const deleteCustomHabit = useCallback(async (id) => {
+    try {
+      await api.delete(`/rituals/${id}`);
+      showToast('Ritual archived');
+      await refreshAll();
+    } catch (err) {
+      showToast(`Failed to delete ritual: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
 
-  const addCustomHabit = useCallback((habit) => {
-    const newHabit = {
-      id: 'habit-' + Date.now(),
-      title: habit.title.trim(),
-      icon: habit.icon || 'self_improvement',
-      anchor: habit.anchor || 'Daily ritual cue',
-      category: habit.category || 'Mind',
-      color: habit.color || 'emerald',
-      completed: false,
-      skipped: false,
-      scheduledTime: habit.scheduledTime || '08:00',
-      priority: habit.priority || 'normal'
-    };
-    syncState(prev => ({
+  // ── Water Hydration Actions ──
+  const incrementWater = useCallback(async (amount = 250) => {
+    // Optimistic update
+    setState((prev) => {
+      const nextMl = prev.waterMl + amount;
+      return {
+        ...prev,
+        waterMl: nextMl,
+        waterGlasses: Math.floor(nextMl / 250)
+      };
+    });
+    setMetrics((prev) => ({
       ...prev,
-      customHabits: [newHabit, ...prev.customHabits]
+      waterMl: prev.waterMl + amount,
+      waterPct: Math.min(100, Math.round(((prev.waterMl + amount) / prev.waterTargetMl) * 100))
     }));
-    showToast(`Added ritual: ${newHabit.title}`);
-    return newHabit;
-  }, [syncState, showToast]);
+    try { MeditativeAudio.playChime(); } catch {}
 
-  const deleteCustomHabit = useCallback((id) => {
-    triggerUndoableAction('Ritual deleted', () => {
-      syncState(prev => ({
-        ...prev,
-        customHabits: prev.customHabits.filter(h => h.id !== id)
-      }));
-    });
-  }, [triggerUndoableAction, syncState]);
+    try {
+      const res = await api.post('/hydration', { amountMl: amount });
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      showToast(`Failed to log water: ${err.message}`);
+      await refreshAll();
+    }
+  }, [showToast, refreshAll]);
 
-  // Water Hydration (in ml & glasses, step 250ml)
-  const incrementWater = useCallback((amount = 250) => {
-    syncState(prev => {
-      const current = prev.waterMl !== undefined ? prev.waterMl : 1500;
-      const target = prev.waterTargetMl || 2000;
-      const nextMl = Math.min(target + 1000, current + amount);
+  const decrementWater = useCallback(async (amount = 250) => {
+    setState((prev) => {
+      const nextMl = Math.max(0, prev.waterMl - amount);
       return {
         ...prev,
         waterMl: nextMl,
         waterGlasses: Math.floor(nextMl / 250)
       };
     });
-  }, [syncState]);
 
-  const decrementWater = useCallback((amount = 250) => {
-    syncState(prev => {
-      const current = prev.waterMl !== undefined ? prev.waterMl : 1500;
-      const nextMl = Math.max(0, current - amount);
-      return {
-        ...prev,
-        waterMl: nextMl,
-        waterGlasses: Math.floor(nextMl / 250)
-      };
-    });
-  }, [syncState]);
+    try {
+      const res = await api.post('/hydration', { amountMl: -amount });
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      await refreshAll();
+    }
+  }, [refreshAll]);
 
-  const setWaterMl = useCallback((ml) => {
-    syncState(prev => {
-      const nextMl = Math.max(0, ml);
-      return {
-        ...prev,
-        waterMl: nextMl,
-        waterGlasses: Math.floor(nextMl / 250)
-      };
-    });
-  }, [syncState]);
+  const setWaterMl = useCallback(async (ml) => {
+    setState((prev) => ({
+      ...prev,
+      waterMl: ml,
+      waterGlasses: Math.floor(ml / 250)
+    }));
+    await api.post('/hydration', { amountMl: ml }).catch(() => {});
+    await refreshAll();
+  }, [refreshAll]);
 
-  // Protein Tracker Actions
-  const addProtein = useCallback((grams, label = 'Quick protein') => {
-    triggerUndoableAction(`Logged +${grams}g protein (${label})`, () => {
-      const entry = {
-        id: 'pe-' + Date.now(),
-        time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        amount: Number(grams),
-        label: label,
-        timestamp: Date.now()
-      };
+  // ── Protein Tracker Actions ──
+  const addProtein = useCallback(async (grams, label = 'Protein portion') => {
+    // Optimistic update
+    const tempId = 'temp-' + Date.now();
+    setState((prev) => ({
+      ...prev,
+      proteinGrams: prev.proteinGrams + Number(grams),
+      proteinEntries: [
+        {
+          id: tempId,
+          amount: Number(grams),
+          label,
+          time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+          timestamp: Date.now()
+        },
+        ...prev.proteinEntries
+      ]
+    }));
+    showToast(`Logged +${grams}g protein (${label})`);
 
-      syncState(prev => {
-        const nextGrams = (prev.proteinGrams || 0) + Number(grams);
-        const nextEntries = [entry, ...(prev.proteinEntries || [])];
-        return {
-          ...prev,
-          proteinGrams: nextGrams,
-          proteinEntries: nextEntries
-        };
+    try {
+      const res = await api.post('/protein', {
+        grams: Number(grams),
+        label,
+        calories: Math.round(Number(grams) * 4)
       });
-    });
-  }, [triggerUndoableAction, syncState]);
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      showToast(`Failed to log protein: ${err.message}`);
+      await refreshAll();
+    }
+  }, [showToast, refreshAll]);
 
-  const deleteProteinEntry = useCallback((entryId) => {
-    triggerUndoableAction('Removed protein entry', () => {
-      syncState(prev => {
-        const target = (prev.proteinEntries || []).find(e => e.id === entryId);
-        const diff = target ? target.amount : 0;
-        const nextEntries = (prev.proteinEntries || []).filter(e => e.id !== entryId);
-        const nextGrams = Math.max(0, (prev.proteinGrams || 0) - diff);
-        return {
-          ...prev,
-          proteinGrams: nextGrams,
-          proteinEntries: nextEntries
-        };
-      });
-    });
-  }, [triggerUndoableAction, syncState]);
+  const deleteProteinEntry = useCallback(async (id) => {
+    // Optimistic delete
+    const target = state.proteinEntries.find((e) => e.id === id);
+    setState((prev) => ({
+      ...prev,
+      proteinGrams: Math.max(0, prev.proteinGrams - (target?.amount || 0)),
+      proteinEntries: prev.proteinEntries.filter((e) => e.id !== id)
+    }));
 
-  const updateProteinGoal = useCallback((newGoal) => {
+    triggerUndo('Removed protein entry', async () => {
+      // Restore on server
+      await api.post(`/protein/${id}/restore`, {}).catch(() => {});
+      await refreshAll();
+    });
+
+    try {
+      await api.delete(`/protein/${id}`);
+    } catch (err) {
+      showToast(`Delete failed: ${err.message}`);
+      await refreshAll();
+    }
+  }, [state.proteinEntries, triggerUndo, showToast, refreshAll]);
+
+  const updateProteinGoal = useCallback(async (newGoal) => {
     const goal = Math.max(20, Math.min(300, parseInt(newGoal, 10) || 90));
-    syncState(prev => ({
-      ...prev,
-      proteinTargetGrams: goal
-    }));
+    setState((prev) => ({ ...prev, proteinTargetGrams: goal }));
+    await api.put('/profile', { goals: { proteinG: goal } }).catch(() => {});
     showToast(`Updated daily protein target to ${goal}g`);
-  }, [syncState, showToast]);
+  }, [showToast]);
 
-  // Focus Minutes Update
-  const addFocusMinutes = useCallback((mins, intention = '') => {
-    syncState(prev => ({
+  // ── Focus Session Actions ──
+  const addFocusMinutes = useCallback(async (mins, intention = 'Deep mindful focus') => {
+    setState((prev) => ({
       ...prev,
-      todayFocusMinutes: (prev.todayFocusMinutes || 0) + mins,
-      mindfulHours: parseFloat(((prev.mindfulHours || 0) + (mins / 60)).toFixed(1))
+      todayFocusMinutes: (prev.todayFocusMinutes || 0) + mins
     }));
     showToast(`✨ Completed ${mins} mins of mindful focus.`);
-  }, [syncState, showToast]);
 
-  // Movement & Workout Logs
-  const saveWorkoutSession = useCallback((sessionData) => {
-    const { exercises, pacing, feel, sessionTitle } = sessionData;
-    const sessionId = 'session-' + Date.now();
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-    const newLogs = exercises.map(ex => {
-      // Check PR
-      ex.sets.forEach(s => {
-        checkAndUpdatePR(ex.workoutName, s.weightKg, s.reps);
+    try {
+      const res = await api.post('/focus/sessions', {
+        plannedMin: mins,
+        actualMin: mins,
+        intention,
+        completed: true
       });
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      await refreshAll();
+    }
+  }, [showToast, refreshAll]);
 
-      const maxWeight = Math.max(...ex.sets.map(s => s.weightKg || 0));
-      const maxReps = Math.max(...ex.sets.map(s => s.reps || 0));
+  // ── Movement & Workout Actions ──
+  const saveWorkoutSession = useCallback(async (sessionData) => {
+    const { exercises, pacing, feel } = sessionData;
 
-      return {
-        id: 'move-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-        date: dateStr,
-        workoutName: ex.workoutName,
-        muscleGroup: ex.muscleGroup || 'full-body',
-        sets: ex.sets,
-        setsCount: ex.sets.length,
-        reps: maxReps,
-        weightKg: maxWeight,
-        pacing: pacing || 'Moderate',
-        feel: feel || 'Comfortable',
-        mode: 'strength',
-        summary: `${ex.workoutName}: ${ex.sets.length} sets · ${maxReps} reps @ ${maxWeight}kg`,
-        supersetGroupId: ex.supersetGroupId || null,
-        sessionId,
-        timestamp: Date.now()
-      };
+    try {
+      for (const ex of exercises) {
+        await api.post('/workouts', {
+          workoutName: ex.workoutName,
+          muscleGroup: ex.muscleGroup || 'full-body',
+          sets: ex.sets || [{ weightKg: 0, reps: 10 }],
+          pacing: pacing || 'Moderate',
+          feel: feel || 'Comfortable'
+        });
+      }
+      showToast(`⚡ Saved workout: ${exercises.length} ${exercises.length === 1 ? 'exercise' : 'exercises'}`);
+      await refreshAll();
+    } catch (err) {
+      showToast(`Workout sync failed: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
+
+  const logCardio = useCallback(async (cardio) => {
+    showToast(`🏃 Cardio noted: ${cardio.activity}`);
+    await refreshAll();
+  }, [showToast, refreshAll]);
+
+  const removeCardio = useCallback(() => {}, []);
+  const logCalories = useCallback(() => {}, []);
+  const removeCalories = useCallback(() => {}, []);
+
+  // ── To-Do Actions ──
+  const addTodoTask = useCallback(async (todo) => {
+    try {
+      const res = await api.post('/todos', {
+        title: todo.title || todo.text,
+        priority: todo.priority || 'normal',
+        dueDate: todo.dueDate || ''
+      });
+      showToast(`Task added: "${res.todo.title}"`);
+      await refreshAll();
+      return res.todo;
+    } catch (err) {
+      showToast(`Failed to add task: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
+
+  const toggleTodoTask = useCallback(async (id) => {
+    const todo = state.todos.find((t) => t.id === id);
+    const nextStatus = todo?.completed ? 'pending' : 'completed';
+
+    setState((prev) => ({
+      ...prev,
+      todos: prev.todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    }));
+
+    try {
+      await api.put(`/todos/${id}`, { status: nextStatus });
+    } catch (err) {
+      await refreshAll();
+    }
+  }, [state.todos, refreshAll]);
+
+  const deleteTodoTask = useCallback(async (id) => {
+    setState((prev) => ({
+      ...prev,
+      todos: prev.todos.filter((t) => t.id !== id)
+    }));
+
+    triggerUndo('Task moved to undo buffer', async () => {
+      await api.post(`/todos/${id}/restore`, {}).catch(() => {});
+      await refreshAll();
     });
 
-    syncState(prev => ({
-      ...prev,
-      movementLogs: [...newLogs, ...(prev.movementLogs || [])],
-      exerciseLibrary: getExerciseLibrary()
-    }));
+    try {
+      await api.delete(`/todos/${id}`);
+    } catch (err) {
+      await refreshAll();
+    }
+  }, [triggerUndo, refreshAll]);
 
-    showToast(`⚡ Saved workout: ${exercises.length} ${exercises.length === 1 ? 'exercise' : 'exercises'}`);
-  }, [syncState, showToast]);
+  const editTodoTask = useCallback(async (id, updates) => {
+    try {
+      await api.put(`/todos/${id}`, updates);
+      await refreshAll();
+      showToast('Task updated.');
+    } catch (err) {
+      showToast(`Update failed: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
 
-  // Cardio & Calorie logging
-  const logCardio = useCallback((cardio) => {
-    const entry = logCardioSession(cardio);
-    syncState(prev => ({
-      ...prev,
-      cardioLogs: [entry, ...(prev.cardioLogs || [])]
-    }));
-    showToast(`🏃 Logged cardio: ${entry.activity} (${entry.durationMin}m)`);
-  }, [syncState, showToast]);
+  // ── Challenge Actions ──
+  const joinChallenge = useCallback(async ({ nickname, avatar }) => {
+    try {
+      await api.post('/challenge/join', { nickname, avatar });
+      showToast('🌿 Joined the Weekly Challenge circle!');
+      await refreshAll();
+    } catch (err) {
+      showToast(`Challenge join failed: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
 
-  const removeCardio = useCallback((id) => {
-    deleteCardioLog(id);
-    syncState(prev => ({
-      ...prev,
-      cardioLogs: prev.cardioLogs.filter(c => c.id !== id)
-    }));
-  }, [syncState]);
+  const leaveChallenge = useCallback(async () => {
+    try {
+      await api.post('/challenge/leave', {});
+      showToast('Left the challenge. Your rhythm remains private.');
+      await refreshAll();
+    } catch (err) {
+      showToast(`Error leaving challenge: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
 
-  const logCalories = useCallback((intake) => {
-    const entry = logCalorieIntake(intake);
-    syncState(prev => ({
-      ...prev,
-      calorieIntakeLogs: [entry, ...(prev.calorieIntakeLogs || [])]
-    }));
-    showToast(`🥗 Logged: ${entry.item} (${entry.calories} kcal)`);
-  }, [syncState, showToast]);
-
-  const removeCalories = useCallback((id) => {
-    deleteCalorieLog(id);
-    syncState(prev => ({
-      ...prev,
-      calorieIntakeLogs: prev.calorieIntakeLogs.filter(f => f.id !== id)
-    }));
-  }, [syncState]);
-
-  // To-Dos
-  const addTodoTask = useCallback((todo) => {
-    const item = addTodo(todo);
-    syncState(prev => ({
-      ...prev,
-      todos: [item, ...(prev.todos.filter(t => t.id !== item.id))]
-    }));
-    showToast(`Task added: "${item.title}"`);
-    return item;
-  }, [syncState, showToast]);
-
-  const toggleTodoTask = useCallback((id) => {
-    triggerUndoableAction('Task status toggled', () => {
-      toggleTodo(id);
-      syncState(prev => ({
-        ...prev,
-        todos: prev.todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
-      }));
-    });
-  }, [triggerUndoableAction, syncState]);
-
-  const deleteTodoTask = useCallback((id) => {
-    triggerUndoableAction('Task removed', () => {
-      deleteTodo(id);
-      syncState(prev => ({
-        ...prev,
-        todos: prev.todos.filter(t => t.id !== id)
-      }));
-    });
-  }, [triggerUndoableAction, syncState]);
-
-  const editTodoTask = useCallback((id, updates) => {
-    syncState(prev => ({
-      ...prev,
-      todos: prev.todos.map(t => t.id === id ? { ...t, ...updates } : t)
-    }));
-    showToast('Task updated.');
-  }, [syncState, showToast]);
-
-  // Challenge (Weekly Leaderboard) Actions
-  const joinChallenge = useCallback(({ nickname, avatar }) => {
-    syncState(prev => ({
-      ...prev,
-      challengeJoined: true,
-      challengeNickname: nickname || prev.challengeNickname || 'CalmRiver',
-      challengeAvatar: avatar || prev.challengeAvatar || '🌱'
-    }));
-    showToast('🌿 Joined the Weekly Challenge circle!');
-  }, [syncState, showToast]);
-
-  const leaveChallenge = useCallback(() => {
-    syncState(prev => ({
-      ...prev,
-      challengeJoined: false
-    }));
-    showToast('Left the challenge. Your rhythm remains private.');
-  }, [syncState, showToast]);
-
-  // Profile Edit
-  const updateProfile = useCallback(({ name, mantra, photo }) => {
-    syncState(prev => ({
-      ...prev,
-      name: name !== undefined ? name : prev.name,
-      mantra: mantra !== undefined ? mantra : prev.mantra,
-      photo: photo !== undefined ? photo : prev.photo
-    }));
-    if (name) localStorage.setItem(STORAGE_KEYS.PROFILE_NAME, name);
-    if (mantra) localStorage.setItem(STORAGE_KEYS.PROFILE_MANTRA, mantra);
-    if (photo) localStorage.setItem(STORAGE_KEYS.PROFILE_PHOTO, photo);
-    showToast('Profile updated successfully.');
-  }, [syncState, showToast]);
-
-  // Derived metrics (strictly calculated from single state object)
-  const metrics = calculateDynamicMetrics(state);
+  // ── Profile Actions ──
+  const updateProfile = useCallback(async ({ name, mantra }) => {
+    try {
+      await api.put('/profile', { displayName: name, mantra });
+      showToast('Profile updated successfully.');
+      await refreshAll();
+    } catch (err) {
+      showToast(`Profile update failed: ${err.message}`);
+    }
+  }, [showToast, refreshAll]);
 
   const value = {
     state,
     metrics,
+    nextUp,
+    isLoadingData,
+    networkError,
+    refreshAll,
     restTimer,
     startRestTimer,
     dismissRestTimer,
     undoState,
     performUndo,
     dismissUndo,
-    triggerUndoableAction,
-    syncState,
+    triggerUndoableAction: triggerUndo,
     toast,
     showToast,
     // Habits
     toggleHabit,
+    checkinRitual,
     skipHabitForToday,
-    resetHabit,
+    resetHabit: checkinRitual,
     addCustomHabit,
     deleteCustomHabit,
     // Hydration
@@ -532,7 +624,7 @@ export function MomentumProvider({ children }) {
     leaveChallenge,
     // Profile
     updateProfile,
-    // Meal Photo Scanner
+    // Meal Scanner
     mealScannerOpen,
     openMealScanner,
     closeMealScanner

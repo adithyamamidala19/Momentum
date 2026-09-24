@@ -11,6 +11,48 @@
     "no-unused-vars": "warn",
     "no-console": "off",
     "semi": ["warn", "always"],
-    "quotes": ["warn", "single", { "avoidEscape": true }]
-  }
+    "quotes": ["warn", "single", { "avoidEscape": true }],
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "localStorage",
+        "message": "HARD SECURITY RULE: localStorage is strictly forbidden. The browser must only render what the API returns."
+      },
+      {
+        "name": "sessionStorage",
+        "message": "HARD SECURITY RULE: sessionStorage is strictly forbidden. The browser must only render what the API returns."
+      },
+      {
+        "name": "indexedDB",
+        "message": "HARD SECURITY RULE: indexedDB is strictly forbidden. The browser must only render what the API returns."
+      }
+    ],
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "window",
+        "property": "localStorage",
+        "message": "HARD SECURITY RULE: window.localStorage is strictly forbidden."
+      },
+      {
+        "object": "window",
+        "property": "sessionStorage",
+        "message": "HARD SECURITY RULE: window.sessionStorage is strictly forbidden."
+      },
+      {
+        "object": "window",
+        "property": "indexedDB",
+        "message": "HARD SECURITY RULE: window.indexedDB is strictly forbidden."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/services/storagePurge.js", "tests/**/*.js"],
+      "rules": {
+        "no-restricted-globals": "off",
+        "no-restricted-properties": "off"
+      }
+    }
+  ]
 }

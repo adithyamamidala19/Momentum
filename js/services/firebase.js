@@ -16,7 +16,7 @@ export const MomentumFirebase = (function() {
   let isAuthReady = false;
 
   const DEFAULT_CONFIG = {
-    apiKey: "AIzaSyBDk7iKccw_YwmGo9DkqKkb-fx09ShZlJM",
+    apiKey: (typeof process !== 'undefined' && process.env?.VITE_FIREBASE_API_KEY) || "",
     authDomain: "momentum-11.firebaseapp.com",
     projectId: "momentum-11",
     storageBucket: "momentum-11.firebasestorage.app",
