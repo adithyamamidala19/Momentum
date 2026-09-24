@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Momentum — Notification Permission Pre-Prompt</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            teal: {
+              DEFAULT: '#0F6E56',
+              light: '#E1F5EE',
+              dark: '#0A4B3A',
+              hover: '#0c5c48'
+            },
+            amber: {
+              DEFAULT: '#BA7517',
+              light: '#FAEEDA'
+            },
+            surface: {
+              DEFAULT: '#FBFBFA',
+              card: '#FFFFFF',
+              border: '#E8E8E6',
+              muted: '#737370'
+            },
+            charcoal: {
+              DEFAULT: '#1F2421',
+              muted: '#5C635E'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif']
+          },
+          borderRadius: {
+            'card': '14px',
+            'pill': '9999px'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #FBFBFA;
+      color: #1F2421;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-teal-light selection:text-teal-dark">
+
+  <!-- Top Minimal Nav / Brand Chrome -->
+  <header class="w-full px-8 py-7 flex items-center justify-between max-w-5xl mx-auto">
+    <button onclick="history.back()" class="flex items-center gap-2 text-surface-muted hover:text-charcoal transition-colors group text-sm">
+      <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="1.75">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+      <span>Back</span>
+    </button>
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-teal"></span>
+      <span class="text-xs font-medium tracking-widest text-surface-muted uppercase">MOMENTUM</span>
+    </div>
+    <div class="text-xs text-surface-muted font-normal">
+      Step 2 of 2
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 flex items-center justify-center px-6 py-10">
+    <div class="w-full max-w-md mx-auto text-center flex flex-col items-center">
+      
+      <!-- Teal-tinted circular icon with gentle outline bell -->
+      <div class="w-14 h-14 rounded-full bg-teal-light flex items-center justify-center mb-8 border border-[#c4ebde] transition-transform duration-300 hover:scale-105">
+        <svg class="w-6 h-6 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+      </div>
+
+      <!-- Headline in warm editorial serif -->
+      <h1 class="font-serif text-3xl sm:text-[34px] font-normal tracking-tight text-charcoal leading-snug mb-4">
+        A quiet nudge now and then
+      </h1>
+
+      <!-- Subtext / Honest copy -->
+      <p class="text-charcoal-muted text-[15px] sm:text-base leading-relaxed max-w-sm mb-9 font-normal">
+        Momentum sends occasional reminders, timed to your own rhythm &mdash; never more than one a day, and never about a broken streak.
+      </p>
+
+      <!-- Trust Assurance Card: Reinforcing calm values without marketing noise -->
+      <div class="w-full bg-white rounded-card p-4 mb-9 border border-surface-border/80 text-left flex items-start gap-3.5">
+        <div class="w-7 h-7 rounded-full bg-teal-light/70 flex items-center justify-center shrink-0 mt-0.5">
+          <svg class="w-4 h-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="text-xs sm:text-[13px] leading-relaxed text-charcoal-muted">
+          <span class="font-medium text-charcoal block mb-0.5">Delivered with intention</span>
+          Notifications arrive only around your anchor rituals, and remain quiet during your focus hours.
+        </div>
+      </div>
+
+      <!-- Action Buttons: Equal visual prominence, respectful parity -->
+      <div class="w-full flex flex-col sm:flex-row items-center gap-3.5">
+        <!-- Allow reminders (Primary Teal Fill) -->
+        <button class="w-full sm:flex-1 h-12 rounded-xl bg-teal hover:bg-teal-hover text-white font-medium text-[15px] transition-all duration-150 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-teal-light active:scale-[0.99]">
+          Allow reminders
+        </button>
+
+        <!-- Not now (Equal Tap Target & Prominence - Outline/Ghost Button) -->
+        <button class="w-full sm:flex-1 h-12 rounded-xl bg-white hover:bg-surface-border/40 text-charcoal font-medium text-[15px] border border-surface-border transition-all duration-150 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-surface-border active:scale-[0.99]">
+          Not now
+        </button>
+      </div>
+
+      <!-- Respectful footnote reassurance -->
+      <p class="mt-5 text-xs text-surface-muted">
+        You can change or turn off reminders anytime in settings.
+      </p>
+
+    </div>
+  </main>
+
+  <!-- Bottom Reflective Beat in Editorial Serif -->
+  <footer class="w-full py-7 px-6 text-center text-xs text-surface-muted border-t border-surface-border/40">
+    <p class="font-serif italic text-sm text-charcoal-muted/80">
+      Built around your peace of mind, not engagement metrics.
+    </p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Momentum — Login</title>
+  <!-- Google Fonts: Plus Jakarta Sans & Newsreader -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            teal: {
+              DEFAULT: '#0F6E56',
+              light: '#E1F5EE',
+              hover: '#0c5845'
+            },
+            amber: {
+              DEFAULT: '#BA7517',
+              light: '#FAEEDA'
+            },
+            bg: '#FBFBFA',
+            surface: '#FFFFFF',
+            charcoal: '#1E2322',
+            muted: '#68726F',
+            borderHairline: '#E7E9E8'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            editorial: ['"Newsreader"', 'Georgia', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #FBFBFA;
+      color: #1E2322;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .editorial {
+      font-family: 'Newsreader', Georgia, serif;
+    }
+    .hairline-border {
+      border: 0.5px solid #E5E7E6;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between max-w-[390px] mx-auto px-6 py-8 relative selection:bg-teal-light selection:text-teal">
+
+  <!-- Top bar / Safe area spacing -->
+  <div class="w-full flex items-center justify-between pt-2">
+    <!-- Optional small subtle wordmark / neutral anchor -->
+    <div class="flex items-center gap-1.5 opacity-60">
+      <span class="text-xs tracking-wider uppercase font-medium text-muted">Momentum</span>
+    </div>
+    <div class="text-xs text-muted">
+      <!-- Quiet subtle indicator -->
+    </div>
+  </div>
+
+  <!-- Main Centered Content Container -->
+  <main class="w-full my-auto flex flex-col items-center text-center">
+
+    <!-- Leaf icon mark inside soft teal-tinted circle -->
+    <div class="w-14 h-14 rounded-full bg-teal-light flex items-center justify-center mb-7">
+      <svg class="w-6 h-6 text-teal stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+      </svg>
+    </div>
+
+    <!-- Editorial Warm Headline -->
+    <h1 class="editorial text-3xl sm:text-4xl text-charcoal font-normal tracking-tight mb-2.5">
+      Welcome back
+    </h1>
+
+    <!-- Muted Subtext -->
+    <p class="text-[15px] leading-relaxed text-muted max-w-[280px] font-normal mb-9">
+      Pick up your rhythm right where you left off.
+    </p>
+
+    <!-- Login Form -->
+    <form class="w-full space-y-4" onsubmit="event.preventDefault();">
+      
+      <!-- Input Field -->
+      <div class="w-full text-left">
+        <label for="identifier" class="sr-only">Email or phone number</label>
+        <input 
+          type="text" 
+          id="identifier" 
+          name="identifier"
+          placeholder="Email or phone number" 
+          class="w-full px-4 py-3.5 rounded-xl bg-surface hairline-border text-[15px] text-charcoal placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-teal focus:border-teal transition-all duration-150"
+        />
+      </div>
+
+      <!-- Primary Action: Continue -->
+      <button 
+        type="button" 
+        class="w-full py-3.5 px-5 rounded-xl bg-teal hover:bg-teal-hover active:scale-[0.99] text-white text-[15px] font-medium transition duration-150 flex items-center justify-center">
+        Continue
+      </button>
+
+      <!-- Divider / Quiet separation -->
+      <div class="py-2 flex items-center gap-3">
+        <div class="flex-1 h-[0.5px] bg-[#E8EAE9]"></div>
+        <span class="text-xs text-muted/70 font-normal">or</span>
+        <div class="flex-1 h-[0.5px] bg-[#E8EAE9]"></div>
+      </div>
+
+      <!-- Secondary Social Options (Ghost / Outline) -->
+      <div class="space-y-2.5 w-full">
+        <!-- Continue with Apple -->
+        <button 
+          type="button" 
+          class="w-full py-3 px-4 rounded-xl bg-transparent hairline-border hover:bg-white/60 active:bg-white text-charcoal text-[14px] font-medium transition duration-150 flex items-center justify-center gap-2.5">
+          <svg class="w-4 h-4 text-charcoal" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.93.04-2.02.63-2.66 1.38-.56.65-1.05 1.71-.91 2.74 1.04.08 2.06-.55 2.65-1.25z"/>
+          </svg>
+          <span>Continue with Apple</span>
+        </button>
+
+        <!-- Continue with Google -->
+        <button 
+          type="button" 
+          class="w-full py-3 px-4 rounded-xl bg-transparent hairline-border hover:bg-white/60 active:bg-white text-charcoal text-[14px] font-medium transition duration-150 flex items-center justify-center gap-2.5">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.15z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.98 0 12c0 2.02.46 3.84 1.26 5.42l4.02-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Quiet, unhurried footer link -->
+  <footer class="w-full pt-6 pb-2 text-center">
+    <p class="text-xs text-muted">
+      New here? 
+      <a href="#" class="text-charcoal font-medium hover:text-teal transition-colors underline-offset-4 decoration-muted/40 hover:underline ml-0.5">
+        Create an account
+      </a>
+    </p>
+  </footer>
+
+</body>
+</html>

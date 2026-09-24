@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "checkJs": false,
+    "allowJs": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./js/*"],
+      "@css/*": ["./css/*"],
+      "@services/*": ["./js/services/*"],
+      "@components/*": ["./js/components/*"],
+      "@pages/*": ["./js/pages/*"]
+    }
+  },
+  "include": [
+    "js/**/*",
+    "*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

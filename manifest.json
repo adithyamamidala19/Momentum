@@ -1,0 +1,22 @@
+{
+  "name": "Momentum — Mindful Habit Sanctuary",
+  "short_name": "Momentum",
+  "description": "Mindful habit tracking, calm soundscapes, grounded AI assistant, and daily rhythm sanctuary.",
+  "start_url": "/index.html#today",
+  "display": "standalone",
+  "background_color": "#f9f9f8",
+  "theme_color": "#005440",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3233/3233497.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3233/3233497.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

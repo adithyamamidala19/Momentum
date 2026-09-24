@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Momentum — Onboarding Welcome</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            teal: {
+              subtle: '#E1F5EE',
+              primary: '#0F6E56',
+              dark: '#0A4D3C'
+            },
+            amber: {
+              subtle: '#FAEEDA',
+              accent: '#BA7517'
+            },
+            surface: {
+              bg: '#FBFBFA',
+              card: '#FFFFFF',
+              subtle: '#F4F4F2'
+            },
+            charcoal: {
+              main: '#1C1E1D',
+              muted: '#636A66',
+              soft: '#8D9490',
+              border: '#E3E6E4'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #FBFBFA;
+      color: #1C1E1D;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-editorial {
+      font-family: 'Newsreader', Georgia, serif;
+    }
+    .hairline-border {
+      border: 0.5px solid #E3E6E4;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-surface-bg flex flex-col justify-between selection:bg-teal-subtle selection:text-teal-primary px-6 py-10 md:py-14">
+
+  <!-- Top Minimal Brand Bar -->
+  <header class="w-full max-w-md mx-auto flex items-center justify-between text-xs tracking-wider text-charcoal-soft uppercase font-medium">
+    <div class="flex items-center gap-2">
+      <span class="tracking-widest text-[11px] text-charcoal-soft font-sans font-medium">MOMENTUM</span>
+    </div>
+    <div class="text-[12px] text-charcoal-soft lowercase tracking-normal font-sans">
+      ritual guide
+    </div>
+  </header>
+
+  <!-- Centered Focal Content -->
+  <main class="w-full max-w-md mx-auto flex flex-col items-center text-center my-auto py-10">
+    
+    <!-- Gentle Leaf Icon Emblem -->
+    <div class="w-14 h-14 rounded-full bg-teal-subtle flex items-center justify-center mb-9 text-teal-primary transition-transform duration-500 ease-out hover:scale-105">
+      <svg class="w-7 h-7 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+      </svg>
+    </div>
+
+    <!-- Editorial Identity Headline -->
+    <h1 class="font-editorial text-[34px] sm:text-[38px] leading-[1.22] font-normal text-charcoal-main mb-5 max-w-sm tracking-[-0.015em]">
+      Small, steady rituals shape who you become.
+    </h1>
+
+    <!-- Calm Reassuring Subtext -->
+    <p class="text-charcoal-muted text-[15px] sm:text-[16px] leading-[1.65] font-normal max-w-xs sm:max-w-sm mb-12">
+      Momentum helps you build a few things well, at your own pace. No streak pressure, no perfect scores.
+    </p>
+
+    <!-- Subtle Calm Graphic Beat / Anchor Pill (Non-gamified) -->
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white hairline-border text-charcoal-muted text-xs mb-10">
+      <span class="w-1.5 h-1.5 rounded-full bg-teal-primary"></span>
+      <span class="font-normal text-charcoal-muted">An unhurried space for daily rhythm</span>
+    </div>
+
+    <!-- Actions Container -->
+    <div class="w-full max-w-xs flex flex-col items-center">
+      <!-- Primary Action -->
+      <button 
+        type="button" 
+        class="w-full py-3.5 px-6 rounded-xl bg-teal-primary text-white font-medium text-[15px] transition-all duration-200 hover:bg-teal-dark active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-teal-subtle focus:ring-offset-2"
+      >
+        Begin
+      </button>
+
+      <!-- Honest Low-Pressure Caption -->
+      <p class="mt-3.5 text-xs text-charcoal-soft font-normal">
+        Takes about a minute
+      </p>
+    </div>
+
+  </main>
+
+  <!-- Grounded Quiet Footer Beat -->
+  <footer class="w-full max-w-md mx-auto text-center pt-6">
+    <p class="font-editorial italic text-xs text-charcoal-soft tracking-wide">
+      A mindful cadence for thoughtful lives
+    </p>
+  </footer>
+
+</body>
+</html>

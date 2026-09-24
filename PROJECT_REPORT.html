@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momentum — Comprehensive Project Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0f6e56;
+    --primary-dark: #005440;
+    --secondary: #d97706;
+    --vitality: #0891b2;
+    --surface: #f9f9f8;
+    --card: #ffffff;
+    --border: #e6e6e3;
+    --text: #1a1c1c;
+    --text-muted: #5a645e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    line-height: 1.65;
+    padding: 2.5rem 1.5rem;
+  }
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  }
+  .badge {
+    display: inline-block;
+    background: #ebf1ed;
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 2.75rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+  }
+  h2 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.75rem;
+    font-weight: 500;
+    color: var(--primary-dark);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  p, li {
+    font-size: 0.95rem;
+    color: #2b332e;
+    margin-bottom: 0.75rem;
+  }
+  ul, ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  li { margin-bottom: 0.4rem; }
+  .meta-box {
+    background: #f4f6f4;
+    border: 1px solid #d8e2dc;
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0 2rem 0;
+    font-size: 0.9rem;
+  }
+  .meta-box p { margin-bottom: 0.3rem; }
+  .meta-box strong { color: var(--primary-dark); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.88rem;
+  }
+  th, td {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  th {
+    background: #f4f6f4;
+    font-weight: 600;
+    color: var(--primary-dark);
+  }
+  .formula-box {
+    background: #fbfbf9;
+    border-left: 4px solid var(--primary);
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+    font-family: monospace;
+    font-size: 0.9rem;
+    border-radius: 0 0.75rem 0.75rem 0;
+  }
+  .diagram-box {
+    background: #1e2421;
+    color: #9aedcf;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    line-height: 1.5;
+  }
+  .print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.65rem 1.25rem;
+    border-radius: 0.75rem;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: background 0.2s;
+  }
+  .print-btn:hover { background: var(--primary-dark); }
+  @media print {
+    body { background: #ffffff; padding: 0; }
+    .container { border: none; box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+    .print-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <button class="print-btn" onclick="window.print()">
+      🖨️ Print / Save as PDF
+    </button>
+    <br>
+    <span class="badge">Project Report &amp; Specification</span>
+    <h1>Momentum — Mindful Rituals Platform</h1>
+    <p style="font-size: 1.1rem; color: var(--text-muted);">A quiet digital sanctuary for building daily rituals at an unhurried pace.</p>
+
+    <div class="meta-box">
+      <p><strong>Project Name:</strong> Momentum — Mindful Rituals Cultivation Platform</p>
+      <p><strong>Repository Path:</strong> <code>c:/Users/Adithya Mamidala/Documents/Demo</code></p>
+      <p><strong>Main Application:</strong> <a href="index.html" style="color: var(--primary); font-weight: 600;">index.html</a></p>
+      <p><strong>Design Specification:</strong> <code>stitch_spec_driven_ui_design_system/</code></p>
+      <p><strong>Latest Update:</strong> September 18, 2026 — <em>Spacious Concentric Score Ring (Zero Overlap), Dynamic Scoring Engine, Habit Tick Action Popover, Insights Sync, and Grounded AI Bot</em></p>
+    </div>
+
+    <h2>1. Executive Summary &amp; Design Philosophy</h2>
+    <p><strong>Momentum</strong> is a mindful habit cultivation and daily ritual platform built on unhurried, anti-burnout principles. Unlike conventional habit trackers that rely on anxiety-inducing streaks, gamified XP ladders, and aggressive notification guilt, Momentum creates a quiet digital sanctuary featuring organic typography, botanical color palettes, physical material craftsmanship, and restorative tracking.</p>
+
+    <h3>Core Architectural Invariants:</h3>
+    <ul>
+      <li><strong>Zero Gamification Bloat:</strong> Strict exclusion of "Levels", "XP", "Diamond Sovereign", "River Flow", "Trophies", "Badges", "Prestige", and celebratory confetti/burst screens.</li>
+      <li><strong>Spacious Concentric Circular Score Ring (160×160 viewBox):</strong> Multi-ring visualization representing daily habits (Outer, <code>#0f6e56</code>, r=68), mindful focus minutes (Middle, <code>#d97706</code>, r=54), and hydration/vitality (Inner, <code>#0891b2</code>, r=40). Features over 74px of clear inner clearance, ensuring centered score text never touches or overlaps any ring across mobile, tablet, and desktop screens.</li>
+      <li><strong>Dynamic Practice-Grounded Scoring Engine:</strong> Dynamic calculation of daily adherence score (0–100%) and cumulative practice points (1600+ base journey + habit points + focus points + workout points + hydration points + streak bonus). Every activity dynamically updates and animates score counters across the Home Screen and Insights section.</li>
+      <li><strong>Interactive Habit Action Popover:</strong> Clicking the tick on any habit opens an interactive modal with <strong>Complete</strong> (+25 pts), <strong>Skip for Today</strong> (rest day without penalty), <strong>Mark Incomplete</strong>, and <strong>Cancel</strong> options.</li>
+      <li><strong>Dynamic &amp; Animated Insights Section:</strong> All graphs, counters, 4-habit matrix bars, and the Native SVG Habit Rhythm Chart are directly bound to live user data and animate smoothly with easing.</li>
+      <li><strong>Focused Session with Meditative Audio &amp; Earbuds Intro:</strong> Fullscreen backdrop blur, smooth upward float animation of wireless earbuds, prominent audio instruction, 3-2-1 countdown with singing bowl chimes, zero music during countdown, and calm ambient music starting precisely when the timer begins.</li>
+      <li><strong>Customizable Movement &amp; Workout Logger:</strong> User-editable Workout Name (<code>[ Bench Press ]</code>), customizable Sets/Reps/Weight (KG), customizable Pacing (<code>Slow</code>, <code>Moderate</code>, <code>Fast</code>, <code>Custom</code> + input), and customizable Feel (<code>Easy</code>, <code>Comfortable</code>, <code>Challenging</code>, <code>Hard</code>, <code>Custom</code> + input).</li>
+      <li><strong>Grounded Home Screen AI Assistant Bot:</strong> Personal assistant answering exclusively from real website data with a strict zero-hallucination rule (<em>"I don't have enough data to answer that yet."</em>).</li>
+    </ul>
+
+    <h2>2. Technical Stack &amp; Implementation Details</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Technology</th>
+          <th>Implementation Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Architecture</strong></td>
+          <td>Single-Page Application (SPA)</td>
+          <td>Pure semantic HTML5 + Vanilla ES6+ JavaScript. No build step required.</td>
+        </tr>
+        <tr>
+          <td><strong>Design Tokens &amp; CSS</strong></td>
+          <td>Tailwind CSS + Custom CSS3</td>
+          <td>Material/Botanical Design tokens mapped to CSS variables, 0.5px hairline framing (<code>#E6E6E3</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>Typography</strong></td>
+          <td>Google Fonts</td>
+          <td><strong>Newsreader</strong> (Editorial serif for mindful aphorisms) + <strong>Plus Jakarta Sans</strong> (Clean sans-serif for UI clarity).</td>
+        </tr>
+        <tr>
+          <td><strong>Iconography</strong></td>
+          <td>Google Material Symbols</td>
+          <td>Monochromatic 1.5px outline stroke symbols.</td>
+        </tr>
+        <tr>
+          <td><strong>Concentric Gauge</strong></td>
+          <td>Scaled SVG (160×160)</td>
+          <td>Concentric rings with smooth rounded endpoints (<code>stroke-linecap="round"</code>), radial center aura glow, and centered score readout with zero overlap.</td>
+        </tr>
+        <tr>
+          <td><strong>Audio Engine</strong></td>
+          <td>Web Audio API (<code>MeditativeAudio</code>)</td>
+          <td>Standalone synthesized pentatonic harmonic pad (F Maj9), resonant 396Hz/432Hz/528Hz singing bowl bells, and binaural alpha waves.</td>
+        </tr>
+        <tr>
+          <td><strong>State Persistence</strong></td>
+          <td><code>localStorage</code> API</td>
+          <td>Persists user profile, mantra, avatar, custom habits, movement logs, and focus sessions across page reloads.</td>
+        </tr>
+        <tr>
+          <td><strong>Dynamic Scoring</strong></td>
+          <td><code>calculateDynamicMetrics</code></td>
+          <td>Real-time calculation of adherence percentages, cumulative score points, and interconnected metrics.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Screen-by-Screen Feature Breakdown</h2>
+    <div class="diagram-box">
+[view-welcome] ──► [view-onboarding-1] ──► [view-onboarding-2] ──► [view-onboarding-3]
+                                                                          │
+[view-today] ◄── [view-otp] ◄─────────────────────────────────────────────┘
+      │
+      ├──► [view-rituals]    (Rituals Directory &amp; Needs-Care Cards)
+      ├──► [view-insights]   (Momentum Arc &amp; Practice Heatmap)
+      ├──► [view-milestones] (Crafted Material Medals &amp; Inscriptions)
+      └──► [view-profile]    (Practitioner Identity &amp; Data Export)
+    </div>
+
+    <h2>4. Concentric Circular Progress Ring Design</h2>
+    <ul>
+      <li><strong>Scaled Geometry (160×160 ViewBox):</strong>
+        <ul>
+          <li><strong>Outer Ring (Habits):</strong> Radius r=68, stroke width 6.0, circumference 427.26 (<code>#0f6e56</code>).</li>
+          <li><strong>Middle Ring (Focus):</strong> Radius r=54, stroke width 6.0, circumference 339.29 (<code>#d97706</code>).</li>
+          <li><strong>Inner Ring (Hydration):</strong> Radius r=40, stroke width 6.0, circumference 251.33 (<code>#0891b2</code>).</li>
+        </ul>
+      </li>
+      <li><strong>Centered Score Typography:</strong>
+        <ul>
+          <li>Clean, ample <strong>74px clear center clearance</strong>.</li>
+          <li>Number and label centered with absolute flexbox centering (<code>inset-0 flex flex-col items-center justify-center</code>).</li>
+          <li>Zero overlap or touching at any screen width.</li>
+        </ul>
+      </li>
+      <li><strong>Loading and Update Animations:</strong> Eased transitions (<code>cubic-bezier(0.16, 1, 0.3, 1)</code>) from 0% on initial load, and animated number counting on score changes.</li>
+    </ul>
+
+    <h2>5. Dynamic Score &amp; Action Popover Engine</h2>
+    <div class="formula-box">
+      Score = 1600 + (25 × Habits) + (1.2 × Focus Mins) + (35 × Workouts) + (3 × Water) + (10 × Streak)<br>
+      Daily Adherence % = (0.5 × Habit %) + (0.3 × Focus %) + (0.2 × Water %)
+    </div>
+    <ul>
+      <li><strong>Habit Tick Action Popover (<code>#habit-action-popover</code>):</strong>
+        <ul>
+          <li><strong>Complete:</strong> Marks habit done, adds points, updates concentric rings &amp; insights, triggers toast.</li>
+          <li><strong>Skip for Today:</strong> Marks habit as rest day without streak penalties.</li>
+          <li><strong>Mark Incomplete:</strong> Resets habit back to pending state.</li>
+          <li><strong>Cancel:</strong> Closes modal with no state changes.</li>
+        </ul>
+      </li>
+      <li><strong>All Activity Triggers Synchronized:</strong> Completing habits, logging workouts, completing focus sessions, and drinking water all trigger <code>recalculateAndSyncAll()</code>.</li>
+    </ul>
+
+    <h2>6. Firebase Authentication &amp; Cloud Firestore Real-Time Sync</h2>
+    <ul>
+      <li><strong>Firebase Web SDK Architecture:</strong> Imported Firebase v10 Compat SDK (<code>firebase-app-compat.js</code>, <code>firebase-auth-compat.js</code>, <code>firebase-firestore-compat.js</code>) in <code>&lt;head&gt;</code>. Modular <code>MomentumFirebase</code> singleton engine with local-first offline fallback.</li>
+      <li><strong>Authentication Options:</strong>
+        <ol>
+          <li><strong>1-Click Instant Mindful Access:</strong> Anonymous authentication (<code>signInAnonymously</code>) ensuring zero-friction onboarding with instant Cloud Firestore document binding.</li>
+          <li><strong>Google Sign-In:</strong> 1-Click popup authentication (<code>signInWithPopup</code> + <code>GoogleAuthProvider</code>).</li>
+          <li><strong>Email &amp; Password Authentication:</strong> Full sign-in and sign-up with password encryption and user profile updates.</li>
+        </ol>
+      </li>
+      <li><strong>Cloud Firestore Schema (<code>users/{userId}</code>):</strong> Auto-synchronized document fields: <code>name</code>, <code>email</code>, <code>phone</code>, <code>streakDays</code>, <code>bestStreak</code>, <code>score</code>, <code>totalScore</code>, <code>mindfulHours</code>, <code>todayFocusMinutes</code>, <code>waterGlasses</code>, <code>customHabits</code> array, <code>movementLogs</code> array, and <code>milestones</code> array.</li>
+      <li><strong>In-App Firebase Configuration &amp; Test Modal (<code>#modal-firebase-config</code>):</strong> Provides live connection testing, JSON/JS snippet auto-parsing, and instant project switching with visual status badges (<code>🟢 Cloud Synced</code> / <code>🟡 Local Mode</code>).</li>
+    </ul>
+  </div>
+</body>
+</html>

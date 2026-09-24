@@ -1,0 +1,47 @@
+{
+  "name": "momentum-mindful-habits",
+  "version": "1.0.0",
+  "description": "Momentum — Mindful habit tracking and daily rhythm sanctuary with meditative soundscapes, smart reminders, and grounded AI assistant.",
+  "type": "module",
+  "main": "js/app.js",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test tests/movement-upgrade.test.js tests/voice-todo.test.js tests/food-vision-scanner.test.js",
+    "lint": "npx eslint js/**/*.js",
+    "format": "npx prettier --write \"**/*.{html,css,js,json,md}\"",
+    "deploy": "firebase deploy"
+  },
+  "keywords": [
+    "habit-tracker",
+    "mindfulness",
+    "vanilla-js",
+    "es-modules",
+    "web-audio",
+    "tailwind",
+    "firebase"
+  ],
+  "author": "Adithya Mamidala",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.10.0",
+    "postcss": "^8.4.47",
+    "prettier": "^3.3.3",
+    "serve": "^14.2.4",
+    "tailwindcss": "^3.4.13",
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "framer-motion": "^13.4.1",
+    "lenis": "^1.3.26",
+    "lucide-react": "^1.47.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "three": "^0.186.0"
+  }
+}

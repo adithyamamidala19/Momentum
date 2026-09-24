@@ -1,0 +1,171 @@
+/* ==========================================================================
+   GLOBAL BASE STYLES & LAYOUT
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  background: #f9f9f8;
+  color: #1a1c1c;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Logo entrance animation */
+.logo-enter {
+  animation: logoEntrance 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.leaf-enter {
+  animation: logoEntrance 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation-delay: 0.1s;
+}
+
+@keyframes logoEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* View transitions */
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+  animation: viewFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes viewFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hairline borders */
+.hairline {
+  border: 0.5px solid #e6e6e3;
+}
+
+.hairline-t {
+  border-top: 0.5px solid #e6e6e3;
+}
+
+.hairline-b {
+  border-bottom: 0.5px solid #e6e6e3;
+}
+
+/* Pre-auth centered layout */
+.preauth-wrap {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Toggle switch */
+.toggle-track {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  align-items: center;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.toggle-track[aria-checked="true"] {
+  background: #0f6e56;
+}
+
+.toggle-track[aria-checked="false"] {
+  background: #e2e2e2;
+}
+
+.toggle-thumb {
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.toggle-track[aria-checked="true"] .toggle-thumb {
+  transform: translateX(1.375rem);
+}
+
+.toggle-track[aria-checked="false"] .toggle-thumb {
+  transform: translateX(0.25rem);
+}
+
+/* Material Symbols fix */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: inherit;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Concentric Progress Rings (160x160 viewBox) */
+.concentric-ring-habits {
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.concentric-ring-focus {
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+
+.concentric-ring-water {
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+
+.hero-ring-glow {
+  filter: drop-shadow(0 2px 8px rgba(15, 110, 86, 0.15));
+}
