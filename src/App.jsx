@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useAuth } from './context/AuthContext.jsx';
 import { useMomentum } from './context/MomentumContext.jsx';
 import AppHeader from './components/layout/AppHeader.jsx';
 import BottomNav from './components/layout/BottomNav.jsx';
@@ -23,53 +24,50 @@ import InsightsPage from './pages/InsightsPage.jsx';
 import MilestonesPage from './pages/MilestonesPage.jsx';
 import ChallengePage from './pages/ChallengePage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import SignInPage from './pages/SignInPage.jsx';
+import PrivacyPage from './pages/PrivacyPage.jsx';
+import TermsPage from './pages/TermsPage.jsx';
 
-// Check sessionStorage so loader only plays once per browser session
-const hasSeenLoader = () => {
-  try {
-    return sessionStorage.getItem('momentum_loader_seen') === 'true';
-  } catch {
-    return false;
-  }
-};
+// STRICT COMPLIANCE: Zero sessionStorage or localStorage. In-memory flag only.
+let loaderSeenInMemory = false;
 
-const markLoaderSeen = () => {
-  try {
-    sessionStorage.setItem('momentum_loader_seen', 'true');
-  } catch {}
-};
+const PUBLIC_VIEWS = ['home', 'signin', 'privacy', 'terms'];
+const VALID_VIEWS = [
+  'home',
+  'signin',
+  'privacy',
+  'terms',
+  'today',
+  'todos',
+  'voice',
+  'rituals',
+  'focus',
+  'movement',
+  'insights',
+  'milestones',
+  'challenge',
+  'profile'
+];
 
 export default function App() {
   const prefersReduced = useReducedMotion();
+  const { user, loading: authLoading, setIntendedRoute } = useAuth();
   const { mealScannerOpen, closeMealScanner } = useMomentum();
 
   const [currentView, setCurrentView] = useState(() => {
     const hash = window.location.hash.slice(1);
-    const validViews = [
-      'home',
-      'today',
-      'todos',
-      'voice',
-      'rituals',
-      'focus',
-      'movement',
-      'insights',
-      'milestones',
-      'challenge',
-      'profile'
-    ];
-    return validViews.includes(hash) ? hash : 'home';
+    return VALID_VIEWS.includes(hash) ? hash : 'home';
   });
 
   const [movementModalOpen, setMovementModalOpen] = useState(false);
   const [movementModalTab, setMovementModalTab] = useState('strength');
 
-  // Loader state: skip if already seen this session
-  const [loaderDone, setLoaderDone] = useState(hasSeenLoader);
-  const [videoReady, setVideoReady] = useState(hasSeenLoader);
+  // Loader state: in-memory only
+  const [loaderDone, setLoaderDone] = useState(loaderSeenInMemory);
+  const [videoReady, setVideoReady] = useState(loaderSeenInMemory);
 
   const handleLoaderDone = () => {
-    markLoaderSeen();
+    loaderSeenInMemory = true;
     setLoaderDone(true);
     setTimeout(() => setVideoReady(true), 400);
   };
@@ -84,20 +82,7 @@ export default function App() {
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.slice(1);
-      const validViews = [
-        'home',
-        'today',
-        'todos',
-        'voice',
-        'rituals',
-        'focus',
-        'movement',
-        'insights',
-        'milestones',
-        'challenge',
-        'profile'
-      ];
-      if (validViews.includes(hash)) {
+      if (VALID_VIEWS.includes(hash)) {
         setCurrentView(hash);
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
@@ -106,15 +91,39 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  // Route Guard: Protect non-public routes
+  useEffect(() => {
+    if (!authLoading && !user && !PUBLIC_VIEWS.includes(currentView)) {
+      setIntendedRoute(currentView);
+      handleSetView('signin');
+    }
+  }, [user, authLoading, currentView, setIntendedRoute]);
+
   const openMovementModal = (tab = 'strength') => {
     setMovementModalTab(tab);
     setMovementModalOpen(true);
   };
 
   const renderView = () => {
+    // If loading auth state on a protected route, render a gentle calm shimmer
+    if (authLoading && !PUBLIC_VIEWS.includes(currentView)) {
+      return (
+        <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-primary-fixed/40 animate-pulse mx-auto" />
+          <p className="text-xs text-outline italic">Entering your mindful sanctuary...</p>
+        </div>
+      );
+    }
+
     switch (currentView) {
       case 'home':
         return <HomePage setView={handleSetView} loaderDone={loaderDone} />;
+      case 'signin':
+        return <SignInPage setView={handleSetView} />;
+      case 'privacy':
+        return <PrivacyPage setView={handleSetView} />;
+      case 'terms':
+        return <TermsPage setView={handleSetView} />;
       case 'today':
         return <TodayPage setView={handleSetView} onOpenMovement={() => openMovementModal('strength')} />;
       case 'todos':
@@ -134,7 +143,7 @@ export default function App() {
       case 'challenge':
         return <ChallengePage setView={handleSetView} />;
       case 'profile':
-        return <ProfilePage />;
+        return <ProfilePage setView={handleSetView} />;
       default:
         return <HomePage setView={handleSetView} loaderDone={loaderDone} />;
     }
@@ -146,7 +155,7 @@ export default function App() {
         {/* ── Premium Background (fixed, behind everything) ── */}
         <BackgroundLayer videoReady={videoReady} />
 
-        {/* ── Cinematic Intro Loader (once per session) ── */}
+        {/* ── Cinematic Intro Loader (once per session, in-memory) ── */}
         <AnimatePresence>
           {!loaderDone && (
             <IntroLoader onDone={handleLoaderDone} />

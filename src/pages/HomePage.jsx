@@ -88,7 +88,7 @@ export default function HomePage({ setView, loaderDone = true }) {
           <HeroBadges loaderDone={loaderDone} delay={1.05}>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary-container" />
-              <span className="text-xs text-outline">100% Client-Side Privacy</span>
+              <span className="text-xs text-outline">Private to Your Account • Never Sold</span>
             </div>
             <div className="flex items-center gap-2 mx-8">
               <Zap className="w-4 h-4 text-secondary-container" />
@@ -201,6 +201,37 @@ export default function HomePage({ setView, loaderDone = true }) {
             </button>
           </div>
         </motion.section>
+
+        {/* ── 6. SANCTUARY FOOTER ── */}
+        <footer className="pt-8 pb-4 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-outline">
+          <div className="flex items-center gap-2">
+            <span className="font-editorial text-sm text-on-surface">Momentum</span>
+            <span>• Mindful Habits & Daily Sanctuary</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={() => setView('privacy')}
+              className="hover:text-primary-container transition-colors cursor-pointer border-0 bg-transparent text-xs text-outline"
+            >
+              Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('terms')}
+              className="hover:text-primary-container transition-colors cursor-pointer border-0 bg-transparent text-xs text-outline"
+            >
+              Terms of Sanctuary
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('signin')}
+              className="hover:text-primary-container transition-colors cursor-pointer border-0 bg-transparent text-xs text-outline font-medium"
+            >
+              Sign In
+            </button>
+          </div>
+        </footer>
       </div>
     </div>
   );

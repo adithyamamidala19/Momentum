@@ -1,13 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
 import { MomentumProvider } from './context/MomentumContext.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MomentumProvider>
-      <App />
-    </MomentumProvider>
+    <AuthProvider>
+      <MomentumProvider>
+        <App />
+      </MomentumProvider>
+    </AuthProvider>
   </React.StrictMode>
 );
