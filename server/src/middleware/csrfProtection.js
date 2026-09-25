@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { isOriginAllowed } from '../utils/originHelper.js';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -14,24 +15,21 @@ export function csrfProtection(req, res, next) {
     return next();
   }
 
-  const allowedOrigins = env.getAllowedOrigins();
   const origin = req.headers['origin'];
   const referer = req.headers['referer'];
 
   // Origin check
   if (origin) {
-    const isAllowed = allowedOrigins.some((allowed) => origin === allowed || allowed === '*');
-    if (!isAllowed) {
-      logger.warn({ msg: 'CSRF Origin check failed', origin, allowedOrigins });
+    if (!isOriginAllowed(origin)) {
+      logger.warn({ msg: 'CSRF Origin check failed', origin });
       return res.status(403).json({ error: 'Forbidden: Origin validation failed' });
     }
   } else if (referer) {
     try {
       const refererUrl = new URL(referer);
       const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
-      const isAllowed = allowedOrigins.some((allowed) => refererOrigin === allowed || allowed === '*');
-      if (!isAllowed) {
-        logger.warn({ msg: 'CSRF Referer check failed', refererOrigin, allowedOrigins });
+      if (!isOriginAllowed(refererOrigin)) {
+        logger.warn({ msg: 'CSRF Referer check failed', refererOrigin });
         return res.status(403).json({ error: 'Forbidden: Referer validation failed' });
       }
     } catch {

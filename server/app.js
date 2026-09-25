@@ -30,6 +30,7 @@ import { friendRoutes } from './src/routes/friendRoutes.js';
 import { chatRoutes } from './src/routes/chatRoutes.js';
 import { moderationRoutes } from './src/routes/moderationRoutes.js';
 import { achievementRoutes } from './src/routes/achievementRoutes.js';
+import { isOriginAllowed } from './src/utils/originHelper.js';
 
 export const app = express();
 
@@ -40,15 +41,10 @@ app.set('trust proxy', 1);
 app.use(securityHeaders);
 
 // CORS configuration with credentials support
-const allowedOrigins = env.getAllowedOrigins();
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      const isLocalDev = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-      const isRender = /^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin);
-      if (isLocalDev || isRender || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -56,7 +52,26 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Request-Id']
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-CSRF-Token',
+      'X-Request-Id',
+      'Cache-Control',
+      'cache-control',
+      'Pragma',
+      'pragma',
+      'Expires',
+      'expires',
+      'Accept',
+      'accept',
+      'Origin',
+      'origin',
+      'X-Requested-With',
+      'x-requested-with'
+    ],
+    exposedHeaders: ['Set-Cookie', 'X-CSRF-Token', 'X-Request-Id'],
+    optionsSuccessStatus: 200
   })
 );
 

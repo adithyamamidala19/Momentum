@@ -39,6 +39,8 @@ export function AuthProvider({ children }) {
     });
   }, [checkAuth]);
 
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
   /**
    * Google sign-in flow:
    * 1. Popup Google Sign-In via Firebase
@@ -47,6 +49,10 @@ export function AuthProvider({ children }) {
    * 4. Server sets httpOnly session cookie and returns user
    */
   const loginWithGoogle = async () => {
+    if (isAuthenticating) {
+      return;
+    }
+    setIsAuthenticating(true);
     setAuthError(null);
     try {
       const { idToken } = await signInWithGoogleAndGetIdToken();
@@ -62,6 +68,8 @@ export function AuthProvider({ children }) {
       const message = err.message || 'Authentication failed. Please try again.';
       setAuthError(message);
       throw new Error(message);
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -93,6 +101,7 @@ export function AuthProvider({ children }) {
         setSessionExpiredNotice,
         intendedRoute,
         setIntendedRoute,
+        isAuthenticating,
         loginWithGoogle,
         logout,
         refreshUser: checkAuth

@@ -2,18 +2,16 @@ import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import { User } from '../models/User.js';
 import { env } from '../config/env.js';
+import { isOriginAllowed } from '../utils/originHelper.js';
 
 let ioInstance = null;
 const onlineUsers = new Map(); // userId -> Set of socketIds
 
 export function initSocketIO(httpServer) {
-  const allowedOrigins = env.getAllowedOrigins();
-
   const io = new Server(httpServer, {
     cors: {
       origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+        if (isOriginAllowed(origin)) {
           callback(null, true);
         } else {
           callback(new Error(`CORS blocked for origin: ${origin}`));
