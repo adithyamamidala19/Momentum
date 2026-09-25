@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { api } from '../../services/apiClient.js';
+import { getSocket } from '../../services/socketService.js';
 import {
   Sparkles,
   Calendar,
@@ -17,7 +20,40 @@ import {
 } from 'lucide-react';
 
 export default function BottomNav({ currentView, setView }) {
+  const { user } = useAuth();
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    let isMounted = true;
+
+    const fetchUnread = async () => {
+      try {
+        const res = await api.get('/chat/unread-count');
+        if (isMounted && typeof res.unreadCount === 'number') {
+          setUnreadCount(res.unreadCount);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+
+    const socket = getSocket(user.id);
+    const handleAlert = () => fetchUnread();
+    socket.on('chat_notification', handleAlert);
+    socket.on('new_message', handleAlert);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      socket.off('chat_notification', handleAlert);
+      socket.off('new_message', handleAlert);
+    };
+  }, [user]);
 
   // 5 Primary Mobile Tabs
   const primaryTabs = [
@@ -28,16 +64,18 @@ export default function BottomNav({ currentView, setView }) {
     { id: 'more', label: 'More', icon: MoreHorizontal, isAction: true }
   ];
 
-  // Secondary pages accessible via the "More" bottom sheet
-  const secondaryPages = [
+  // Secondary pages accessible via the "More" bottom sheet (Home hidden when logged in)
+  const allSecondaryPages = [
     { id: 'todos', label: 'To-Dos', icon: CheckSquare, desc: 'Mindful task checklists' },
     { id: 'voice', label: 'Voice Sanctuary', icon: Mic, desc: 'Aria assistant & audio log' },
     { id: 'movement', label: 'Movement', icon: Flame, desc: 'Strength & physical practice' },
     { id: 'insights', label: 'Insights', icon: TrendingUp, desc: 'Consistency & rhythm curves' },
     { id: 'milestones', label: 'Milestones', icon: Award, desc: '3D specular medals' },
     { id: 'profile', label: 'Profile & Settings', icon: User, desc: 'Personal sanctuary cadence' },
-    { id: 'home', label: 'Home Sanctuary', icon: Home, desc: 'Overview & philosophy' }
+    { id: 'home', label: 'Home Sanctuary', icon: Home, desc: 'Overview & philosophy', publicOnly: true }
   ];
+
+  const secondaryPages = user ? allSecondaryPages.filter(p => !p.publicOnly) : allSecondaryPages;
 
   const handleTabClick = (tab) => {
     if (tab.isAction) {
@@ -85,6 +123,9 @@ export default function BottomNav({ currentView, setView }) {
               >
                 <div className="relative">
                   <Icon className="w-5 h-5 stroke-[2.2]" />
+                  {tab.id === 'challenge' && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-[#FAF7F0] animate-pulse" />
+                  )}
                   {isActive && (
                     <motion.div
                       layoutId="bottomNavDot"

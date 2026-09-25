@@ -1,11 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMomentum } from '../../context/MomentumContext.jsx';
-import {
-  getExerciseLibrary,
-  addOrUpdateExerciseInLibrary,
-  getLatestWorkoutSession
-} from '../../../js/state.js';
+import { DEFAULT_EXERCISE_LIBRARY } from '../../../js/storage.js';
 import {
   X, Plus, Timer, Trash2, Link, Trophy, Flame, Activity, Utensils, Search, Check, Sparkles
 } from 'lucide-react';
@@ -32,8 +28,7 @@ export default function MovementModal({ isOpen, onClose, initialTab = 'strength'
       muscleGroup: 'chest',
       supersetGroupId: null,
       sets: [
-        { setNumber: 1, weightKg: 60, reps: 10, isPR: false },
-        { setNumber: 2, weightKg: 65, reps: 8, isPR: false }
+        { setNumber: 1, weightKg: 0, reps: 10, isPR: false }
       ]
     }
   ]);
@@ -58,8 +53,39 @@ export default function MovementModal({ isOpen, onClose, initialTab = 'strength'
   // PR Filter State
   const [prMuscleFilter, setPrMuscleFilter] = useState('all');
 
-  const library = useMemo(() => getExerciseLibrary(), [state.movementLogs]);
-  const lastSession = useMemo(() => getLatestWorkoutSession(), [state.movementLogs]);
+  // Authoritative user-isolated exercise library and last workout session
+  const library = useMemo(() => {
+    if (state.exerciseLibrary && state.exerciseLibrary.length > 0) {
+      return state.exerciseLibrary;
+    }
+    return DEFAULT_EXERCISE_LIBRARY;
+  }, [state.exerciseLibrary]);
+
+  const lastSession = useMemo(() => {
+    const logs = state.movementLogs || [];
+    if (logs.length === 0) return null;
+
+    const latestLog = logs[0];
+    const targetSessionId = latestLog.sessionId || `session-${latestLog.timestamp || latestLog.id || 'default'}`;
+    const sessionExercises = logs.filter(
+      l => (l.sessionId || `session-${l.timestamp || l.id || 'default'}`) === targetSessionId
+    );
+
+    const groupCounts = {};
+    sessionExercises.forEach(e => {
+      const g = e.muscleGroup || 'Full-body';
+      groupCounts[g] = (groupCounts[g] || 0) + 1;
+    });
+    const dominantGroup = Object.keys(groupCounts).sort((a, b) => groupCounts[b] - groupCounts[a])[0] || 'Strength';
+
+    return {
+      sessionId: targetSessionId,
+      sessionTitle: `${dominantGroup.charAt(0).toUpperCase() + dominantGroup.slice(1)} Session`,
+      pacing: latestLog.pacing || 'Moderate',
+      feel: latestLog.feel || 'Comfortable',
+      exercises: sessionExercises
+    };
+  }, [state.movementLogs]);
 
   // Filtered Exercises for Picker
   const filteredPickerExercises = useMemo(() => {
@@ -181,7 +207,7 @@ export default function MovementModal({ isOpen, onClose, initialTab = 'strength'
           workoutName: ex.name,
           muscleGroup: ex.muscleGroup,
           supersetGroupId: null,
-          sets: [{ setNumber: 1, weightKg: ex.personalBest?.weightKg || 40, reps: 10, isPR: false }]
+          sets: [{ setNumber: 1, weightKg: ex.personalBest?.weightKg || 0, reps: 10, isPR: false }]
         }
       ]);
     }
@@ -697,30 +723,51 @@ export default function MovementModal({ isOpen, onClose, initialTab = 'strength'
               </div>
 
               {/* Verified Lifts List */}
-              <div className="space-y-2">
-                {library
-                  .filter(e => prMuscleFilter === 'all' || e.muscleGroup.toLowerCase() === prMuscleFilter.toLowerCase())
-                  .map(ex => {
-                    const pb = ex.personalBest || { weightKg: 0, reps: 0 };
-                    return (
-                      <div
-                        key={ex.id}
-                        className="p-3.5 rounded-2xl bg-surface-container-lowest hairline flex items-center justify-between gap-3"
-                      >
-                        <div>
-                          <h4 className="text-xs font-bold text-on-surface">{ex.name}</h4>
-                          <span className="text-[10px] text-outline capitalize">
-                            {ex.muscleGroup} {pb.date ? `· ${pb.date}` : ''}
-                          </span>
+              {(() => {
+                const prsList = library.filter(e => {
+                  const pb = e.personalBest;
+                  const hasPR = pb && (Number(pb.weightKg) > 0 || Number(pb.reps) > 0);
+                  const matchMuscle = prMuscleFilter === 'all' || (e.muscleGroup || '').toLowerCase() === prMuscleFilter.toLowerCase();
+                  return hasPR && matchMuscle;
+                });
+
+                if (prsList.length === 0) {
+                  return (
+                    <div className="p-8 text-center rounded-2xl bg-surface-container-low hairline space-y-2">
+                      <Trophy className="w-8 h-8 text-outline/50 mx-auto" />
+                      <h4 className="text-xs font-bold text-on-surface">No Personal Records Yet</h4>
+                      <p className="text-[11px] text-outline max-w-xs mx-auto">
+                        Your personal bests will automatically appear here as you log your strength workouts.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-2">
+                    {prsList.map(ex => {
+                      const pb = ex.personalBest;
+                      return (
+                        <div
+                          key={ex.id || ex.name}
+                          className="p-3.5 rounded-2xl bg-surface-container-lowest hairline flex items-center justify-between gap-3"
+                        >
+                          <div>
+                            <h4 className="text-xs font-bold text-on-surface">{ex.name}</h4>
+                            <span className="text-[10px] text-outline capitalize">
+                              {ex.muscleGroup} {pb.date ? `· ${pb.date}` : ''}
+                            </span>
+                          </div>
+                          <div className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold flex items-center gap-1 shrink-0">
+                            <Trophy className="w-3 h-3 text-amber-600" />
+                            <span>{pb.weightKg} kg × {pb.reps}</span>
+                          </div>
                         </div>
-                        <div className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold flex items-center gap-1 shrink-0">
-                          <Trophy className="w-3 h-3 text-amber-600" />
-                          <span>{pb.weightKg} kg × {pb.reps}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -776,24 +823,32 @@ export default function MovementModal({ isOpen, onClose, initialTab = 'strength'
 
               {/* List */}
               <div className="flex-1 overflow-y-auto space-y-1.5">
-                {filteredPickerExercises.map(ex => (
-                  <button
-                    key={ex.id}
-                    type="button"
-                    onClick={() => handleSelectExercise(ex)}
-                    className="w-full p-2.5 rounded-xl hover:bg-surface-container flex items-center justify-between text-left cursor-pointer border-0 bg-transparent transition-colors"
-                  >
-                    <div>
-                      <span className="text-xs font-semibold text-on-surface block">{ex.name}</span>
-                      <span className="text-[10px] text-outline capitalize">{ex.muscleGroup}</span>
-                    </div>
-                    {ex.personalBest?.weightKg > 0 && (
-                      <span className="text-[10px] text-amber-800 font-medium">
-                        PB: {ex.personalBest.weightKg}kg × {ex.personalBest.reps}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {filteredPickerExercises.map(ex => {
+                  const pb = ex.personalBest;
+                  const hasPR = pb && (Number(pb.weightKg) > 0 || Number(pb.reps) > 0);
+                  return (
+                    <button
+                      key={ex.id || ex.name}
+                      type="button"
+                      onClick={() => handleSelectExercise(ex)}
+                      className="w-full p-2.5 rounded-xl hover:bg-surface-container flex items-center justify-between text-left cursor-pointer border-0 bg-transparent transition-colors"
+                    >
+                      <div>
+                        <span className="text-xs font-semibold text-on-surface block">{ex.name}</span>
+                        <span className="text-[10px] text-outline capitalize">{ex.muscleGroup}</span>
+                      </div>
+                      {hasPR ? (
+                        <span className="text-[10px] text-amber-800 font-medium">
+                          PB: {pb.weightKg}kg × {pb.reps}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-outline font-normal">
+                          No PR yet
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           )}

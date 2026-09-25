@@ -11,7 +11,7 @@ export default function WaterBottle({ className = '' }) {
   const isInView = useInView(containerRef, { amount: 0.2 });
 
   // Real store data
-  const currentMl = state.waterMl !== undefined ? state.waterMl : 1500;
+  const currentMl = state.waterMl !== undefined ? state.waterMl : 0;
   const targetMl = state.waterTargetMl || 2000;
   const glasses = Math.floor(currentMl / 250);
   const targetGlasses = Math.floor(targetMl / 250);

@@ -41,98 +41,39 @@ export const DEFAULT_HABITS = [
 ];
 
 export const DEFAULT_EXERCISE_LIBRARY = [
-  { id: 'ex-bench-press', name: 'Bench Press', muscleGroup: 'chest', personalBest: { weightKg: 65, reps: 8, date: '2026-09-20' }, lastUsed: { weightKg: 60, reps: 10, setsCount: 3, date: '2026-09-20' }, isCustom: false },
-  { id: 'ex-incline-db', name: 'Incline Dumbbell Press', muscleGroup: 'chest', personalBest: { weightKg: 28, reps: 10, date: '2026-09-18' }, lastUsed: { weightKg: 26, reps: 10, setsCount: 3, date: '2026-09-18' }, isCustom: false },
-  { id: 'ex-pushups', name: 'Push-ups', muscleGroup: 'chest', personalBest: { weightKg: 0, reps: 30, date: '2026-09-15' }, lastUsed: { weightKg: 0, reps: 25, setsCount: 3, date: '2026-09-15' }, isCustom: false },
-  { id: 'ex-dips', name: 'Dips', muscleGroup: 'chest', personalBest: { weightKg: 15, reps: 10, date: '2026-09-12' }, lastUsed: { weightKg: 10, reps: 10, setsCount: 3, date: '2026-09-12' }, isCustom: false },
+  { id: 'ex-bench-press', name: 'Bench Press', muscleGroup: 'chest', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-incline-db', name: 'Incline Dumbbell Press', muscleGroup: 'chest', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-pushups', name: 'Push-ups', muscleGroup: 'chest', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-dips', name: 'Dips', muscleGroup: 'chest', personalBest: null, lastUsed: null, isCustom: false },
 
-  { id: 'ex-squat', name: 'Barbell Squat', muscleGroup: 'legs', personalBest: { weightKg: 100, reps: 5, date: '2026-09-19' }, lastUsed: { weightKg: 90, reps: 8, setsCount: 3, date: '2026-09-19' }, isCustom: false },
-  { id: 'ex-leg-press', name: 'Leg Press', muscleGroup: 'legs', personalBest: { weightKg: 180, reps: 10, date: '2026-09-16' }, lastUsed: { weightKg: 160, reps: 12, setsCount: 3, date: '2026-09-16' }, isCustom: false },
-  { id: 'ex-rdl', name: 'Romanian Deadlift', muscleGroup: 'legs', personalBest: { weightKg: 85, reps: 8, date: '2026-09-14' }, lastUsed: { weightKg: 80, reps: 10, setsCount: 3, date: '2026-09-14' }, isCustom: false },
-  { id: 'ex-bulgarian', name: 'Bulgarian Split Squat', muscleGroup: 'legs', personalBest: { weightKg: 22, reps: 10, date: '2026-09-10' }, lastUsed: { weightKg: 20, reps: 10, setsCount: 3, date: '2026-09-10' }, isCustom: false },
+  { id: 'ex-squat', name: 'Barbell Squat', muscleGroup: 'legs', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-leg-press', name: 'Leg Press', muscleGroup: 'legs', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-rdl', name: 'Romanian Deadlift', muscleGroup: 'legs', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-bulgarian', name: 'Bulgarian Split Squat', muscleGroup: 'legs', personalBest: null, lastUsed: null, isCustom: false },
 
-  { id: 'ex-deadlift', name: 'Deadlift', muscleGroup: 'back', personalBest: { weightKg: 130, reps: 5, date: '2026-09-17' }, lastUsed: { weightKg: 120, reps: 5, setsCount: 3, date: '2026-09-17' }, isCustom: false },
-  { id: 'ex-barbell-row', name: 'Barbell Row', muscleGroup: 'back', personalBest: { weightKg: 70, reps: 8, date: '2026-09-17' }, lastUsed: { weightKg: 65, reps: 10, setsCount: 3, date: '2026-09-17' }, isCustom: false },
-  { id: 'ex-lat-pulldown', name: 'Lat Pulldown', muscleGroup: 'back', personalBest: { weightKg: 60, reps: 10, date: '2026-09-17' }, lastUsed: { weightKg: 55, reps: 12, setsCount: 3, date: '2026-09-17' }, isCustom: false },
-  { id: 'ex-pullups', name: 'Pull-ups', muscleGroup: 'back', personalBest: { weightKg: 0, reps: 12, date: '2026-09-15' }, lastUsed: { weightKg: 0, reps: 10, setsCount: 3, date: '2026-09-15' }, isCustom: false },
+  { id: 'ex-deadlift', name: 'Deadlift', muscleGroup: 'back', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-barbell-row', name: 'Barbell Row', muscleGroup: 'back', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-lat-pulldown', name: 'Lat Pulldown', muscleGroup: 'back', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-pullups', name: 'Pull-ups', muscleGroup: 'back', personalBest: null, lastUsed: null, isCustom: false },
 
-  { id: 'ex-ohp', name: 'Overhead Press', muscleGroup: 'shoulders', personalBest: { weightKg: 45, reps: 6, date: '2026-09-18' }, lastUsed: { weightKg: 40, reps: 8, setsCount: 3, date: '2026-09-18' }, isCustom: false },
-  { id: 'ex-lat-raise', name: 'Dumbbell Lateral Raise', muscleGroup: 'shoulders', personalBest: { weightKg: 12, reps: 15, date: '2026-09-18' }, lastUsed: { weightKg: 10, reps: 15, setsCount: 3, date: '2026-09-18' }, isCustom: false },
-  { id: 'ex-face-pull', name: 'Face Pull', muscleGroup: 'shoulders', personalBest: { weightKg: 30, reps: 15, date: '2026-09-18' }, lastUsed: { weightKg: 25, reps: 15, setsCount: 3, date: '2026-09-18' }, isCustom: false },
+  { id: 'ex-ohp', name: 'Overhead Press', muscleGroup: 'shoulders', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-lat-raise', name: 'Dumbbell Lateral Raise', muscleGroup: 'shoulders', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-face-pull', name: 'Face Pull', muscleGroup: 'shoulders', personalBest: null, lastUsed: null, isCustom: false },
 
-  { id: 'ex-curl', name: 'Bicep Curl', muscleGroup: 'arms', personalBest: { weightKg: 16, reps: 10, date: '2026-09-18' }, lastUsed: { weightKg: 14, reps: 12, setsCount: 3, date: '2026-09-18' }, isCustom: false },
-  { id: 'ex-hammer-curl', name: 'Hammer Curl', muscleGroup: 'arms', personalBest: { weightKg: 18, reps: 10, date: '2026-09-18' }, lastUsed: { weightKg: 16, reps: 10, setsCount: 3, date: '2026-09-18' }, isCustom: false },
-  { id: 'ex-pushdown', name: 'Tricep Pushdown', muscleGroup: 'arms', personalBest: { weightKg: 35, reps: 12, date: '2026-09-18' }, lastUsed: { weightKg: 30, reps: 12, setsCount: 3, date: '2026-09-18' }, isCustom: false },
+  { id: 'ex-curl', name: 'Bicep Curl', muscleGroup: 'arms', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-hammer-curl', name: 'Hammer Curl', muscleGroup: 'arms', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-pushdown', name: 'Tricep Pushdown', muscleGroup: 'arms', personalBest: null, lastUsed: null, isCustom: false },
 
-  { id: 'ex-plank', name: 'Plank', muscleGroup: 'core', personalBest: { weightKg: 0, reps: 90, date: '2026-09-20' }, lastUsed: { weightKg: 0, reps: 60, setsCount: 3, date: '2026-09-20' }, isCustom: false },
-  { id: 'ex-cable-crunch', name: 'Cable Crunch', muscleGroup: 'core', personalBest: { weightKg: 40, reps: 15, date: '2026-09-20' }, lastUsed: { weightKg: 35, reps: 15, setsCount: 3, date: '2026-09-20' }, isCustom: false },
-  { id: 'ex-clean-press', name: 'Clean & Press', muscleGroup: 'full-body', personalBest: { weightKg: 50, reps: 5, date: '2026-09-10' }, lastUsed: { weightKg: 45, reps: 6, setsCount: 3, date: '2026-09-10' }, isCustom: false }
+  { id: 'ex-plank', name: 'Plank', muscleGroup: 'core', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-cable-crunch', name: 'Cable Crunch', muscleGroup: 'core', personalBest: null, lastUsed: null, isCustom: false },
+  { id: 'ex-clean-press', name: 'Clean & Press', muscleGroup: 'full-body', personalBest: null, lastUsed: null, isCustom: false }
 ];
 
-export const DEFAULT_MOVEMENTS = [
-  {
-    id: 'move-1',
-    date: '2026-09-20',
-    workoutName: 'Bench Press',
-    muscleGroup: 'chest',
-    sets: [
-      { setNumber: 1, weightKg: 60, reps: 10, isPR: false },
-      { setNumber: 2, weightKg: 65, reps: 8, isPR: true }
-    ],
-    setsCount: 2,
-    reps: 8,
-    weightKg: 65,
-    pacing: 'Moderate',
-    feel: 'Comfortable',
-    mode: 'strength',
-    summary: '2 sets, up to 8 reps @ 65kg',
-    supersetGroupId: null,
-    sessionId: 'session-1726830000',
-    timestamp: Date.now() - 172800000
-  },
-  {
-    id: 'move-2',
-    date: '2026-09-20',
-    workoutName: 'Incline Dumbbell Press',
-    muscleGroup: 'chest',
-    sets: [
-      { setNumber: 1, weightKg: 24, reps: 10, isPR: false },
-      { setNumber: 2, weightKg: 26, reps: 10, isPR: false }
-    ],
-    setsCount: 2,
-    reps: 10,
-    weightKg: 26,
-    pacing: 'Moderate',
-    feel: 'Comfortable',
-    mode: 'strength',
-    summary: '2 sets, up to 10 reps @ 26kg',
-    supersetGroupId: null,
-    sessionId: 'session-1726830000',
-    timestamp: Date.now() - 172700000
-  }
-];
+export const DEFAULT_MOVEMENTS = [];
 
-export const DEFAULT_CARDIO_LOGS = [
-  {
-    id: 'cardio-1',
-    date: '2026-09-21',
-    activity: 'Treadmill',
-    durationMin: 30,
-    caloriesBurned: 280,
-    timestamp: Date.now() - 86400000
-  }
-];
+export const DEFAULT_CARDIO_LOGS = [];
 
-export const DEFAULT_CALORIE_LOGS = [
-  {
-    id: 'food-1',
-    date: '2026-09-22',
-    time: '13:20',
-    item: 'Chicken rice bowl',
-    calories: 650,
-    timestamp: Date.now() - 18000000
-  }
-];
+export const DEFAULT_CALORIE_LOGS = [];
 
 export const DEFAULT_TODOS = [
   {

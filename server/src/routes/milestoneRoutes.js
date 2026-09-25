@@ -6,3 +6,6 @@ export const milestoneRoutes = Router();
 
 milestoneRoutes.use(requireAuth);
 milestoneRoutes.get('/', MilestoneController.getMilestones);
+milestoneRoutes.post('/verify-share', MilestoneController.verifyShare);
+milestoneRoutes.post('/share-log', MilestoneController.logShare);
+

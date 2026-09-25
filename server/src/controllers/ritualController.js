@@ -141,4 +141,52 @@ export class RitualController {
       overview
     });
   }
+
+  /**
+   * POST /api/rituals/:id/uncheck
+   * Removes today's checkin or skip log, returning ritual to pending state.
+   */
+  static async uncheckRitual(req, res) {
+    const { id } = req.params;
+    const today = getLocalDateString(new Date(), req.user.timezone);
+
+    await RitualLog.deleteOne({
+      userId: req.user._id,
+      ritualId: id,
+      date: today
+    });
+
+    MetricsService.updateWeeklyScore(req.user).catch(() => {});
+    const overview = await MetricsService.getTodayOverview(req.user);
+
+    return res.status(200).json({
+      success: true,
+      overview
+    });
+  }
+
+  /**
+   * POST /api/rituals/batch
+   * Creates multiple rituals at once (used during onboarding setup).
+   */
+  static async createRitualsBatch(req, res) {
+    const { rituals } = req.body;
+    if (!Array.isArray(rituals) || rituals.length === 0) {
+      return res.status(200).json({ rituals: [] });
+    }
+
+    const currentCount = await Ritual.countDocuments({ userId: req.user._id });
+    const docs = rituals.map((r, i) => ({
+      userId: req.user._id,
+      name: r.name,
+      category: r.category || 'Health',
+      anchor: r.anchor || '',
+      time: r.time || '08:00',
+      schedule: r.schedule || ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+      order: currentCount + i + 1
+    }));
+
+    const created = await Ritual.insertMany(docs);
+    return res.status(201).json({ rituals: created });
+  }
 }

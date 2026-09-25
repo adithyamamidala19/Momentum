@@ -488,6 +488,27 @@ html, body {
   50%       { transform: scale(1.018); opacity: 0.92; }
 }
 
+/* Specular Holographic Shimmer for Medals */
+@keyframes medalShimmer {
+  0% { transform: translateX(-140%) rotate(25deg); opacity: 0; }
+  20% { opacity: 0.55; }
+  80% { opacity: 0.55; }
+  100% { transform: translateX(240%) rotate(25deg); opacity: 0; }
+}
+
+.animate-medal-shimmer {
+  animation: medalShimmer 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes ambientGlowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.08); opacity: 0.75; }
+}
+
+.animate-ambient-pulse {
+  animation: ambientGlowPulse 3s ease-in-out infinite;
+}
+
 /* ── prefers-reduced-motion ───────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .bg-mesh,

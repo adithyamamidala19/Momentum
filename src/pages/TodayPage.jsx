@@ -50,7 +50,7 @@ export default function TodayPage({ setView, onOpenMovement }) {
     day: 'numeric'
   });
 
-  const userName = titleCaseName(state.name || 'Adithya Mamidala');
+  const userName = titleCaseName(state.name || 'Mindful Practitioner');
 
   // Today's rituals: filter for rituals due today (or take top 4)
   const habits = state.customHabits || [];

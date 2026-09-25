@@ -5,54 +5,67 @@ import { MeditativeAudio } from '../../js/services/soundscape.js';
 
 const MomentumContext = createContext(null);
 
+const getCleanState = (currentUser) => ({
+  name: currentUser?.displayName || '',
+  mantra: currentUser?.mantra || 'Small, steady actions today quietly shape the person you become.',
+  photo: currentUser?.photoURL || '',
+  customHabits: [],
+  movementLogs: [],
+  cardioLogs: [],
+  calorieIntakeLogs: [],
+  exerciseLibrary: [],
+  todos: [],
+  waterMl: 0,
+  waterTargetMl: currentUser?.goals?.waterMl || 2000,
+  waterGlasses: 0,
+  waterTargetGlasses: Math.floor((currentUser?.goals?.waterMl || 2000) / 250),
+  proteinGrams: 0,
+  proteinTargetGrams: currentUser?.goals?.proteinG || 90,
+  proteinEntries: [],
+  challengeJoined: Boolean(currentUser?.challenge?.optedIn),
+  challengeNickname: currentUser?.challenge?.nickname || '',
+  challengeAvatar: currentUser?.challenge?.avatar || '🌱',
+  streakDays: 0,
+  todayFocusMinutes: 0,
+  mindfulHours: 0
+});
+
+const defaultMilestones = [
+  { id: 'ms-bronze', medalId: 'streak-7', name: '7-Day Genesis', tier: 'Bronze', threshold: '7-Day Rhythm', targetDays: 7, description: 'Establish an unbroken 7-day rhythm of grounded habits.', achieved: false, progress: 0, remainingDays: 7, progressPct: 0, date: null, verificationCode: null },
+  { id: 'ms-silver', medalId: 'streak-30', name: '30-Day Flow', tier: 'Silver', threshold: '30-Day Rhythm', targetDays: 30, description: 'Maintain mindful daily presence across a full month of practice.', achieved: false, progress: 0, remainingDays: 30, progressPct: 0, date: null, verificationCode: null },
+  { id: 'ms-gold', medalId: 'streak-100', name: '100-Day Centurion', tier: 'Gold', threshold: '100-Day Rhythm', targetDays: 100, description: 'A monumental milestone of 100 continuous days of presence.', achieved: false, progress: 0, remainingDays: 100, progressPct: 0, date: null, verificationCode: null },
+  { id: 'ms-plat', medalId: 'streak-365', name: '365-Day Master', tier: 'Platinum', threshold: '365-Day Rhythm', targetDays: 365, description: 'An entire year devoted to unhurried, intentional living.', achieved: false, progress: 0, remainingDays: 365, progressPct: 0, date: null, verificationCode: null }
+];
+
+const getCleanMetrics = (currentUser) => ({
+  dailyAdherenceScore: 0,
+  habitPct: 0,
+  focusPct: 0,
+  waterPct: 0,
+  proteinPct: 0,
+  completedHabitsCount: 0,
+  activeHabitsCount: 0,
+  eligibleHabitsCount: 0,
+  waterMl: 0,
+  waterTargetMl: currentUser?.goals?.waterMl || 2000,
+  proteinGrams: 0,
+  proteinTargetGrams: currentUser?.goals?.proteinG || 90,
+  focusMinutes: 0,
+  focusTargetMinutes: currentUser?.goals?.focusMin || 25,
+  streak: 0,
+  totalPoints: 0,
+  milestones: defaultMilestones,
+  nextMilestone: defaultMilestones[0]
+});
+
 export function MomentumProvider({ children }) {
   const { user } = useAuth();
 
-  // In-memory state (Zero localStorage / sessionStorage)
-  const [state, setState] = useState(() => ({
-    name: 'Adithya Mamidala',
-    mantra: 'Small, steady actions today quietly shape the person you become.',
-    photo: '',
-    customHabits: [],
-    movementLogs: [],
-    cardioLogs: [],
-    calorieIntakeLogs: [],
-    exerciseLibrary: [],
-    todos: [],
-    waterMl: 1750,
-    waterTargetMl: 2000,
-    waterGlasses: 7,
-    waterTargetGlasses: 8,
-    proteinGrams: 45,
-    proteinTargetGrams: 90,
-    proteinEntries: [],
-    challengeJoined: false,
-    challengeNickname: 'CalmRiver',
-    challengeAvatar: '🌱',
-    streakDays: 1,
-    todayFocusMinutes: 20,
-    mindfulHours: 0.3
-  }));
+  // In-memory state (Zero localStorage / sessionStorage, strictly user-isolated)
+  const [state, setState] = useState(() => getCleanState(user));
 
   // Authoritative server metrics
-  const [metrics, setMetrics] = useState(() => ({
-    dailyAdherenceScore: 83,
-    habitPct: 83,
-    focusPct: 80,
-    waterPct: 88,
-    proteinPct: 50,
-    completedHabitsCount: 5,
-    activeHabitsCount: 6,
-    eligibleHabitsCount: 6,
-    waterMl: 1750,
-    waterTargetMl: 2000,
-    proteinGrams: 45,
-    proteinTargetGrams: 90,
-    focusMinutes: 20,
-    focusTargetMinutes: 25,
-    streak: 12,
-    totalPoints: 1931
-  }));
+  const [metrics, setMetrics] = useState(() => getCleanMetrics(user));
 
   const [nextUp, setNextUp] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -144,7 +157,9 @@ export function MomentumProvider({ children }) {
           })),
           movementLogs: workoutsData?.workouts || [],
           exerciseLibrary: exercisesData?.exercises || [],
-          streakDays: todayData.metrics.streak
+          streakDays: todayData.metrics.streak,
+          todayFocusMinutes: todayData.metrics.focusMinutes || 0,
+          mindfulHours: Number(((todayData.metrics.focusMinutes || 0) / 60).toFixed(1))
         }));
       }
     } catch (err) {
@@ -155,9 +170,21 @@ export function MomentumProvider({ children }) {
     }
   }, [user]);
 
-  // Initial fetch and focus revalidation
+  // Reset state and fetch fresh data when user changes or logs out
   useEffect(() => {
+    if (!user) {
+      setState(getCleanState(null));
+      setMetrics(getCleanMetrics(null));
+      setNextUp(null);
+      return;
+    }
+    setState(getCleanState(user));
+    setMetrics(getCleanMetrics(user));
     refreshAll();
+  }, [user?.id, user?._id]);
+
+  // Focus revalidation
+  useEffect(() => {
     const handleFocus = () => refreshAll();
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
@@ -266,14 +293,33 @@ export function MomentumProvider({ children }) {
     }
   }, [showToast, refreshAll]);
 
+  const uncheckRitual = useCallback(async (id) => {
+    setState((prev) => ({
+      ...prev,
+      customHabits: prev.customHabits.map((h) =>
+        h.id === id ? { ...h, completed: false, skipped: false } : h
+      )
+    }));
+    try {
+      const res = await api.post(`/rituals/${id}/uncheck`, {});
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      showToast(`Error unchecking ritual: ${err.message}`);
+      await refreshAll();
+    }
+  }, [showToast, refreshAll]);
+
   const toggleHabit = useCallback((id) => {
     const habit = state.customHabits.find((h) => h.id === id);
     if (!habit?.completed) {
       checkinRitual(id);
     } else {
-      skipHabitForToday(id);
+      uncheckRitual(id);
     }
-  }, [state.customHabits, checkinRitual, skipHabitForToday]);
+  }, [state.customHabits, checkinRitual, uncheckRitual]);
 
   const addCustomHabit = useCallback(async (habit) => {
     try {
@@ -343,7 +389,7 @@ export function MomentumProvider({ children }) {
     });
 
     try {
-      const res = await api.post('/hydration', { amountMl: -amount });
+      const res = await api.post('/hydration/decrement', {});
       if (res?.overview) {
         setMetrics(res.overview.metrics);
         setNextUp(res.overview.nextUp);
@@ -354,13 +400,21 @@ export function MomentumProvider({ children }) {
   }, [refreshAll]);
 
   const setWaterMl = useCallback(async (ml) => {
+    const validMl = Math.max(0, Number(ml) || 0);
     setState((prev) => ({
       ...prev,
-      waterMl: ml,
-      waterGlasses: Math.floor(ml / 250)
+      waterMl: validMl,
+      waterGlasses: Math.floor(validMl / 250)
     }));
-    await api.post('/hydration', { amountMl: ml }).catch(() => {});
-    await refreshAll();
+    try {
+      const res = await api.put('/hydration', { targetMl: validMl });
+      if (res?.overview) {
+        setMetrics(res.overview.metrics);
+        setNextUp(res.overview.nextUp);
+      }
+    } catch (err) {
+      await refreshAll();
+    }
   }, [refreshAll]);
 
   // ── Protein Tracker Actions ──
@@ -549,10 +603,13 @@ export function MomentumProvider({ children }) {
       await api.post('/challenge/join', { nickname, avatar });
       showToast('🌿 Joined the Weekly Challenge circle!');
       await refreshAll();
+      return { success: true };
     } catch (err) {
-      showToast(`Challenge join failed: ${err.message}`);
+      showToast(err.message);
+      return { success: false, error: err.message };
     }
   }, [showToast, refreshAll]);
+
 
   const leaveChallenge = useCallback(async () => {
     try {
@@ -594,6 +651,7 @@ export function MomentumProvider({ children }) {
     // Habits
     toggleHabit,
     checkinRitual,
+    uncheckRitual,
     skipHabitForToday,
     resetHabit: checkinRitual,
     addCustomHabit,

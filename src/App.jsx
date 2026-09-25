@@ -27,6 +27,11 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import SignInPage from './pages/SignInPage.jsx';
 import PrivacyPage from './pages/PrivacyPage.jsx';
 import TermsPage from './pages/TermsPage.jsx';
+import OnboardingWizard from './components/onboarding/OnboardingWizard.jsx';
+import ChatDrawer from './components/chat/ChatDrawer.jsx';
+import { getSocket } from './services/socketService.js';
+import { api } from './services/apiClient.js';
+import { MeditativeAudio } from '../js/services/soundscape.js';
 
 // STRICT COMPLIANCE: Zero storage usage; in-memory flag only.
 let loaderSeenInMemory = false;
@@ -52,7 +57,7 @@ const VALID_VIEWS = [
 export default function App() {
   const prefersReduced = useReducedMotion();
   const { user, loading: authLoading, setIntendedRoute } = useAuth();
-  const { mealScannerOpen, closeMealScanner } = useMomentum();
+  const { mealScannerOpen, closeMealScanner, showToast } = useMomentum();
 
   const [currentView, setCurrentView] = useState(() => {
     const hash = window.location.hash.slice(1);
@@ -61,6 +66,51 @@ export default function App() {
 
   const [movementModalOpen, setMovementModalOpen] = useState(false);
   const [movementModalTab, setMovementModalTab] = useState('strength');
+  const [globalChatFriend, setGlobalChatFriend] = useState(null);
+
+  // Global real-time socket listener for incoming chat notifications
+  useEffect(() => {
+    if (!user) return;
+    const socket = getSocket(user.id);
+
+    const onChatNotification = (data) => {
+      if (data?.type === 'new_message' && data.senderNickname) {
+        // If drawer is already open with this user, don't duplicate toast
+        if (globalChatFriend?.id === data.senderId) return;
+
+        showToast(
+          `💬 ${data.senderAvatar || '🌱'} ${data.senderNickname}: "${(data.message?.text || '').slice(0, 36)}${
+            data.message?.text?.length > 36 ? '...' : ''
+          }"`
+        );
+      }
+    };
+
+    socket.on('chat_notification', onChatNotification);
+    return () => socket.off('chat_notification', onChatNotification);
+  }, [user, globalChatFriend, showToast]);
+
+  const handleOpenGlobalChat = async () => {
+    try {
+      const res = await api.get('/chat/conversations');
+      if (res.conversations && res.conversations.length > 0) {
+        const unreadConv = res.conversations.find((c) => (c.unreadCount || 0) > 0) || res.conversations[0];
+        if (unreadConv?.otherUser) {
+          setGlobalChatFriend({
+            id: unreadConv.otherUser.id,
+            nickname: unreadConv.otherUser.nickname,
+            avatar: unreadConv.otherUser.avatar,
+            conversationId: unreadConv.id,
+            showOnlineStatus: unreadConv.otherUser.showOnlineStatus
+          });
+          return;
+        }
+      }
+      handleSetView('challenge');
+    } catch {
+      handleSetView('challenge');
+    }
+  };
 
   // Loader state: in-memory only
   const [loaderDone, setLoaderDone] = useState(loaderSeenInMemory);
@@ -74,6 +124,9 @@ export default function App() {
 
   // Synchronize hash in URL and scroll to top without layout jump
   const handleSetView = (view) => {
+    if (currentView === 'focus' && view !== 'focus') {
+      try { MeditativeAudio.stopTone(); } catch (e) {}
+    }
     setCurrentView(view);
     window.location.hash = view;
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -83,19 +136,26 @@ export default function App() {
     const onHashChange = () => {
       const hash = window.location.hash.slice(1);
       if (VALID_VIEWS.includes(hash)) {
+        if (currentView === 'focus' && hash !== 'focus') {
+          try { MeditativeAudio.stopTone(); } catch (e) {}
+        }
         setCurrentView(hash);
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+  }, [currentView]);
 
-  // Route Guard: Protect non-public routes
+  // Route Guard: Protect non-public routes & redirect authenticated users away from home/signin
   useEffect(() => {
-    if (!authLoading && !user && !PUBLIC_VIEWS.includes(currentView)) {
-      setIntendedRoute(currentView);
-      handleSetView('signin');
+    if (!authLoading) {
+      if (!user && !PUBLIC_VIEWS.includes(currentView)) {
+        setIntendedRoute(currentView);
+        handleSetView('signin');
+      } else if (user && (currentView === 'home' || currentView === 'signin')) {
+        handleSetView('today');
+      }
     }
   }, [user, authLoading, currentView, setIntendedRoute]);
 
@@ -137,7 +197,7 @@ export default function App() {
       case 'movement':
         return <MovementPage onOpenMovement={() => openMovementModal('strength')} />;
       case 'insights':
-        return <InsightsPage />;
+        return <InsightsPage setView={handleSetView} />;
       case 'milestones':
         return <MilestonesPage />;
       case 'challenge':
@@ -148,6 +208,19 @@ export default function App() {
         return <HomePage setView={handleSetView} loaderDone={loaderDone} />;
     }
   };
+
+  // If user is authenticated but hasn't completed onboarding, render the setup wizard
+  if (user && user.onboardingCompleted === false) {
+    return (
+      <SmoothScroll>
+        <div className="min-h-screen flex flex-col text-on-surface w-full max-w-[100vw] overflow-x-hidden" style={{ backgroundColor: '#FAF7F0' }}>
+          <BackgroundLayer videoReady={videoReady} />
+          <OnboardingWizard onComplete={() => handleSetView('today')} />
+          <GlobalToast />
+        </div>
+      </SmoothScroll>
+    );
+  }
 
   return (
     <SmoothScroll>
@@ -163,7 +236,12 @@ export default function App() {
         </AnimatePresence>
 
         {/* ── Desktop App Header ── */}
-        <AppHeader currentView={currentView} setView={handleSetView} loaderDone={loaderDone} />
+        <AppHeader
+          currentView={currentView}
+          setView={handleSetView}
+          loaderDone={loaderDone}
+          onOpenChat={handleOpenGlobalChat}
+        />
 
         {/* ── Main Content Area with Route Transitions ── */}
         <main className="flex-1 pb-24 md:pb-12 w-full max-w-[100vw] overflow-x-hidden">
@@ -184,8 +262,10 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        {/* ── Mobile Bottom Navigation ── */}
-        <BottomNav currentView={currentView} setView={handleSetView} />
+        {/* ── Mobile Bottom Navigation (Hidden on Home & Sign In) ── */}
+        {currentView !== 'home' && currentView !== 'signin' && (
+          <BottomNav currentView={currentView} setView={handleSetView} />
+        )}
 
         {/* ── Persistent Global Modals and Floating Overlays ── */}
         <RestTimerPill />
@@ -199,6 +279,23 @@ export default function App() {
           isOpen={mealScannerOpen}
           onClose={closeMealScanner}
         />
+
+        {/* ── Global 1:1 Safe Chat Drawer ── */}
+        {globalChatFriend && (
+          <ChatDrawer
+            isOpen={Boolean(globalChatFriend)}
+            onClose={() => setGlobalChatFriend(null)}
+            friend={globalChatFriend}
+            onOpenPrivacy={() => {
+              setGlobalChatFriend(null);
+              handleSetView('privacy');
+            }}
+            onUserBlocked={() => {
+              setGlobalChatFriend(null);
+              showToast('User blocked.');
+            }}
+          />
+        )}
       </div>
     </SmoothScroll>
   );

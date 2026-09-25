@@ -67,3 +67,40 @@ Momentum's visual identity centers around creating a tranquil, grounded digital 
 - [x] **Keyboard Escape Hatches:** Modals close seamlessly on `Escape` keypress.
 - [x] **Zero Layout Shifts (CLS = 0):** Image containers and dynamic widgets specify explicit aspect ratios and skeleton fallbacks.
 - [x] **Mobile Responsiveness:** Tested and verified across 375px (iPhone SE), 414px (iPhone 14 Plus), 768px (iPad Mini), and 1440px (Desktop).
+
+---
+
+## 5. 3D Medals, Social Sharing & Chat Design Polish
+
+### Apple Fitness+ Medal Hierarchy (Flat Grid vs. Real 3D Detail)
+- **Milestones 2D Grid:** Restored flat 2D award cards in the grid with authentic tier colors (Bronze, Silver, Gold, Platinum), progress bars, and locked/earned indicators. Real 3D rendering is strictly deferred to the detail view (Apple Fitness+ pattern).
+- **Procedural 3D Canvas Geometry & PBR Materials:**
+  - One base cylinder coin geometry (radius 2.3, height 0.28, 64 segments) dynamically shaded with `MeshPhysicalMaterial` tailored per tier (warm bronze, chrome silver, rich gold, iridescent platinum).
+  - HDRI studio lighting via `@react-three/drei`'s `<Environment>` for realistic specular highlights and rim bevel reflections.
+  - Procedural 1024x1024 canvas front (emblem, roman numeral, inner notched ring, tier header) and back (Momentum wordmark, recipient nickname, date, server verification code, or locked shield).
+  - Multi-axis drag-to-rotate with inertia/momentum, auto-rotation upon 1.2s idle, desktop cursor parallax tilt, and graceful CSS 3D fallback if WebGL is unavailable.
+  - Bundle code-splitting: `Medal3D` is loaded via `React.lazy` + `Suspense`, isolating the 1MB Three.js bundle into its own chunk (`dist/assets/Medal3D-*.js`) so the main app loads instantly.
+
+### Social Sharing with 3-Tier Fallback Chain
+- **1080x1080 Branded Share Card:** Procedural canvas snapshot showing the 3D medal at a dynamic angle with the user's Challenge pseudonym and brand mark.
+- **Three-Tier Fallback:**
+  1. *Navigator.canShare with files:* Mobile native share sheet dispatching directly to Instagram, WhatsApp, X, etc.
+  2. *Navigator.share text/link:* Fallback to text and deep link.
+  3. *Desktop Fallback Panel:* Explicit "Download Image" PNG button and one-click "Copy Caption & Link" button.
+- **Privacy Identity:** Uses only Challenge pseudonym and botanical avatar; prompts user to pick a public identity if not opted in.
+
+### Visitable Public Profiles & Safe DTO
+- **In-Context Profile Modal:** Tapping any participant on the Challenge leaderboard opens their profile modal with direct URL deep-linking support (`/#challenge-u-:nickname`).
+- **Strict Privacy Isolation:** Shows only nickname, avatar, short bio (max 150 chars), streak, percentile badge, and earned medals. Never exposes real name, email, age, weight, gender, practice points, or health logs.
+- **Visitor Medal Mode:** Visited medals open in the 3D viewer with `isOtherUser={true}`, cleanly omitting verification codes and personal codes.
+- **Moderation Actions:** Prominent "Report Practitioner" modal and "Block User" confirmation.
+
+### 1:1 Real-Time Chat & Trust & Safety
+- **Brand Aesthetic:** Cream canvas (`#FAF7F0`), deep forest green user bubbles (`#0F6E56`, white text), sage friend bubbles (`#E8EFEA`, dark text).
+- **Smooth Message Arrival:** Slide-and-fade animation (~0.3s) with auto-scroll to newest message.
+- **10-Second Undo Retract:** Accidental messages display a subtle countdown chip permitting instant deletion within 10 seconds.
+- **Presence & Feedback:** Subtle active/resting dot (respecting user's `showOnlineStatus` setting), typing indicators ("... is writing"), and read receipts.
+- **Automated PII Shield:** Client and server regex validation intercepting phone numbers, emails, and social handles with an inline safety warning: *"For everyone's safety, messages can't include contact details or personal info. This space is for building good habits together."*
+- **First-Time Chat Safety Interstitial:** Mandatory one-time acknowledgment before first message is dispatched.
+- **Plain-Language Privacy Policy:** Dedicated `/privacy` page covering the 7 core privacy areas, linked from sign-in, onboarding, header, profile, and chat modal.
+

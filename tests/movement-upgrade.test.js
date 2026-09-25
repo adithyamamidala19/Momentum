@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { normalizeMovementLogs, DEFAULT_EXERCISE_LIBRARY } from '../js/storage.js';
+import {
+  normalizeMovementLogs,
+  DEFAULT_EXERCISE_LIBRARY,
+  DEFAULT_MOVEMENTS,
+  DEFAULT_CARDIO_LOGS,
+  DEFAULT_CALORIE_LOGS
+} from '../js/storage.js';
 import { 
   userState, 
   checkAndUpdatePR, 
@@ -268,4 +274,19 @@ test('7. Aria Voice Intent Pattern Matching for Movement Upgrades', () => {
   const match5 = matchIntent('what is my PR on overhead press');
   assert.ok(match5.intentDef);
   assert.equal(match5.intentDef.name, 'movement.checkPR');
+});
+
+test('8. Clean Slate & User-Isolated Personal Records Integrity', () => {
+  // 1. Verify default exercise library has zero hardcoded personal bests
+  assert.ok(Array.isArray(DEFAULT_EXERCISE_LIBRARY));
+  assert.equal(DEFAULT_EXERCISE_LIBRARY.length, 21, 'Should have 21 standard movements in catalog');
+  DEFAULT_EXERCISE_LIBRARY.forEach((ex) => {
+    assert.equal(ex.personalBest, null, `Exercise "${ex.name}" must not have pre-seeded personal bests`);
+    assert.equal(ex.lastUsed, null, `Exercise "${ex.name}" must not have pre-seeded lastUsed`);
+  });
+
+  // 2. Verify all default log arrays are completely empty
+  assert.deepEqual(DEFAULT_MOVEMENTS, [], 'DEFAULT_MOVEMENTS must be empty for new users');
+  assert.deepEqual(DEFAULT_CARDIO_LOGS, [], 'DEFAULT_CARDIO_LOGS must be empty for new users');
+  assert.deepEqual(DEFAULT_CALORIE_LOGS, [], 'DEFAULT_CALORIE_LOGS must be empty for new users');
 });

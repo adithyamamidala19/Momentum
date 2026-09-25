@@ -1,19 +1,28 @@
 import dotenv from 'dotenv';
+import path from 'path';
 import { z } from 'zod';
 
-// Load environment variables from .env
+// Load environment variables from server/.env or root .env fallback
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), 'server/.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
+
+const serverPort =
+  process.env.SERVER_PORT ||
+  (process.env.PORT && process.env.PORT !== '3000' ? process.env.PORT : '5000');
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.string().default('5000').transform((val) => parseInt(val, 10)),
+  PORT: z.string().default(serverPort).transform((val) => parseInt(val, 10)),
   MONGODB_URI: z.string().default('mongodb://localhost:27017/momentum'),
   CLIENT_ORIGIN: z.string().default('http://localhost:3000,http://localhost:3001,http://localhost:5173'),
-  FIREBASE_PROJECT_ID: z.string().default('momentum-mindful-sanctuary'),
+  FIREBASE_PROJECT_ID: z.string().default('momentum-11'),
   FIREBASE_CLIENT_EMAIL: z.string().email('FIREBASE_CLIENT_EMAIL must be a valid service account email').optional().or(z.literal('')),
   FIREBASE_PRIVATE_KEY: z.string().optional().or(z.literal('')),
   SESSION_COOKIE_NAME: z.string().default('__session'),
   SESSION_MAX_AGE_DAYS: z.string().default('14').transform((val) => parseInt(val, 10)),
+  SESSION_SECRET: z.string().default('momentum_sanctuary_dev_secret_key_32_chars_min'),
   COOKIE_DOMAIN: z.string().optional().default(''),
   GEMINI_API_KEY: z.string().optional().default(''),
   SENTRY_DSN: z.string().optional().default('')
@@ -47,8 +56,16 @@ const refinedEnvSchema = envSchema.superRefine((data, ctx) => {
 });
 
 let parsedEnv;
+const effectivePort =
+  process.env.SERVER_PORT ||
+  (process.env.PORT === '3000' ? '5000' : (process.env.PORT || '5000'));
+
 try {
-  parsedEnv = refinedEnvSchema.parse(process.env);
+  parsedEnv = refinedEnvSchema.parse({
+    ...process.env,
+    MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb://localhost:27017/momentum',
+    PORT: effectivePort
+  });
 } catch (error) {
   if (error instanceof z.ZodError) {
     console.error('❌ Critical Environment Configuration Error:');
@@ -63,14 +80,15 @@ try {
   // Fallback defaults for dev when env variables haven't been pasted yet
   parsedEnv = {
     NODE_ENV: process.env.NODE_ENV || 'development',
-    PORT: parseInt(process.env.PORT || '5000', 10),
-    MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/momentum_dev',
+    PORT: parseInt(effectivePort, 10),
+    MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb://localhost:27017/momentum_dev',
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000,http://localhost:3001,http://localhost:5173',
     FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || 'momentum-dev',
     FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL || '',
     FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY || '',
     SESSION_COOKIE_NAME: process.env.SESSION_COOKIE_NAME || '__session',
     SESSION_MAX_AGE_DAYS: parseInt(process.env.SESSION_MAX_AGE_DAYS || '14', 10),
+    SESSION_SECRET: process.env.SESSION_SECRET || 'momentum_sanctuary_dev_secret_key_32_chars_min',
     COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || '',
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     SENTRY_DSN: process.env.SENTRY_DSN || ''

@@ -17,14 +17,14 @@ export class FocusController {
   }
 
   static async createSession(req, res) {
-    const { plannedMin, actualMin, intention, startedAt, endedAt, completed } = req.body;
+    const { plannedMin, actualMin, intention, tag, startedAt, endedAt, completed } = req.body;
     const today = getLocalDateString(new Date(), req.user.timezone);
 
     const session = await FocusSession.create({
       userId: req.user._id,
       plannedMin,
       actualMin: actualMin !== undefined ? actualMin : plannedMin,
-      intention: intention || 'Deep mindful focus',
+      intention: intention || tag || 'Deep mindful focus',
       startedAt: startedAt ? new Date(startedAt) : new Date(),
       endedAt: endedAt ? new Date(endedAt) : new Date(),
       completed: completed !== undefined ? completed : true,

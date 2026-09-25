@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Info
 } from 'lucide-react';
 
 export default function VoicePage() {
@@ -42,10 +43,21 @@ export default function VoicePage() {
   ]);
   const [textInput, setTextInput] = useState('');
 
+  // Check speech recognition capability
+  const isSpeechSupported = typeof window !== 'undefined' && Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+
   const canvasRef = useRef(null);
   const recognitionRef = useRef(null);
+  const orbStateRef = useRef('idle');
+  const transcriptAccumulatorRef = useRef('');
   const animationFrameRef = useRef(null);
   const historyBottomRef = useRef(null);
+
+  // Audio analyser references for live mic reactivity
+  const audioCtxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const audioStreamRef = useRef(null);
+  const audioSourceRef = useRef(null);
 
   // Suggested prompt chips
   const suggestedPrompts = [
@@ -55,54 +67,67 @@ export default function VoicePage() {
     'Skip breathing ritual for today'
   ];
 
-  // Initialize Speech Recognition
+  // Keep orbStateRef in sync with state
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = true;
-      rec.lang = 'en-US';
+    orbStateRef.current = orbState;
+  }, [orbState]);
 
-      rec.onstart = () => {
-        setOrbState('listening');
-      };
-
-      rec.onresult = (e) => {
-        const current = Array.from(e.results)
-          .map(r => r[0].transcript)
-          .join('');
-        setTranscript(current);
-      };
-
-      rec.onend = () => {
-        if (orbState === 'listening') {
-          setOrbState('processing');
-        }
-      };
-
-      rec.onerror = (e) => {
-        if (e.error === 'not-allowed') {
-          setOrbState('permission-denied');
-        } else {
-          setOrbState('error');
-        }
-      };
-
-      recognitionRef.current = rec;
-    }
-
+  // Clean up all audio and speech engines on component unmount
+  useEffect(() => {
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.abort();
+        try { recognitionRef.current.abort(); } catch (e) {}
       }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      cleanupAudioStream();
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [orbState]);
+  }, []);
 
-  // Audio Reactive Sine Wave Canvas in Brand Forest & Sage
+  // Setup Web Audio Analyser for live visual feedback
+  const setupAudioAnalyser = (stream) => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioCtx();
+      }
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+
+      const source = audioCtxRef.current.createMediaStreamSource(stream);
+      const analyser = audioCtxRef.current.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+
+      analyserRef.current = analyser;
+      audioSourceRef.current = source;
+    } catch (e) {
+      console.warn('[Aria] Audio visualizer setup notice:', e);
+    }
+  };
+
+  const cleanupAudioStream = () => {
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach(track => {
+        try { track.stop(); } catch (e) {}
+      });
+      audioStreamRef.current = null;
+    }
+    if (audioSourceRef.current) {
+      try { audioSourceRef.current.disconnect(); } catch (e) {}
+      audioSourceRef.current = null;
+    }
+    analyserRef.current = null;
+  };
+
+  // Audio-reactive sine wave rendering in Brand Forest (#0F6E56) & Sage
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -116,17 +141,33 @@ export default function VoicePage() {
       const height = canvas.height;
       const centerY = height / 2;
 
-      const isListening = orbState === 'listening';
-      const isSpeaking = orbState === 'speaking';
-      const isProcessing = orbState === 'processing';
-      const amp = isListening ? 26 : isSpeaking ? 18 : isProcessing ? 14 : 7;
+      const currentState = orbStateRef.current;
+      const isListening = currentState === 'listening';
+      const isSpeaking = currentState === 'speaking';
+      const isProcessing = currentState === 'processing';
+
+      // Measure live mic volume if available during listening
+      let micLevel = 0;
+      if (isListening && analyserRef.current) {
+        try {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+          }
+          micLevel = (sum / dataArray.length) / 255; // 0.0 to 1.0
+        } catch (e) {}
+      }
+
+      const baseAmp = isListening ? 14 + (micLevel * 32) : isSpeaking ? 18 : isProcessing ? 14 : 7;
 
       // Layer 1: Forest Green Sine Wave
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(15, 110, 86, 0.85)';
       ctx.lineWidth = 2.5;
       for (let x = 0; x < width; x++) {
-        const y = centerY + Math.sin(x * 0.025 + phase) * amp;
+        const y = centerY + Math.sin(x * 0.025 + phase) * baseAmp;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -137,13 +178,13 @@ export default function VoicePage() {
       ctx.strokeStyle = 'rgba(163, 198, 177, 0.7)';
       ctx.lineWidth = 2;
       for (let x = 0; x < width; x++) {
-        const y = centerY + Math.sin(x * 0.035 - phase * 1.3) * (amp * 0.75);
+        const y = centerY + Math.sin(x * 0.035 - phase * 1.3) * (baseAmp * 0.75);
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
 
-      phase += isListening ? 0.08 : 0.04;
+      phase += isListening ? 0.08 + (micLevel * 0.05) : 0.04;
       animationFrameRef.current = requestAnimationFrame(render);
     };
 
@@ -154,10 +195,9 @@ export default function VoicePage() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [orbState]);
+  }, []);
 
   const machineRef = useRef(null);
-  const pendingInputRef = useRef('');
 
   // Initialize ConversationStateMachine
   useEffect(() => {
@@ -173,26 +213,52 @@ export default function VoicePage() {
           }
         ]);
         setOrbState('speaking');
+        orbStateRef.current = 'speaking';
 
         if (window.speechSynthesis) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(replyText);
           utterance.rate = 1.0;
           utterance.pitch = 1.05;
+
+          // Pick a natural English voice if available
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoice = voices.find(v =>
+            v.lang.startsWith('en') &&
+            (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Female'))
+          );
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          }
+
           utterance.onend = () => {
-            setOrbState(expectResponse ? 'listening' : 'success');
-            setTimeout(() => {
-              setOrbState('idle');
-            }, 3000);
+            if (expectResponse) {
+              startListening();
+            } else {
+              setOrbState('success');
+              orbStateRef.current = 'success';
+              setTimeout(() => {
+                setOrbState('idle');
+                orbStateRef.current = 'idle';
+              }, 2500);
+            }
           };
+
           utterance.onerror = () => {
             setOrbState('idle');
+            orbStateRef.current = 'idle';
           };
+
           window.speechSynthesis.speak(utterance);
         } else {
           setTimeout(() => {
-            setOrbState(expectResponse ? 'listening' : 'idle');
-          }, 2400);
+            if (expectResponse) {
+              startListening();
+            } else {
+              setOrbState('idle');
+              orbStateRef.current = 'idle';
+            }
+          }, 2200);
         }
       },
       onUndoTrigger: (actionName) => {
@@ -201,61 +267,200 @@ export default function VoicePage() {
     });
   }, [triggerUndoableAction]);
 
-  // Handle Command Processing
+  // Handle Command Processing (Voice or Text)
   const handleProcessCommand = async (text) => {
-    if (!text.trim()) {
+    if (!text || !text.trim()) {
       setOrbState('idle');
+      orbStateRef.current = 'idle';
       return;
     }
 
-    pendingInputRef.current = text;
+    const trimmed = text.trim();
     setOrbState('processing');
+    orbStateRef.current = 'processing';
 
-    // Add user message to history
+    // Add user message to conversation history
     setHistory(prev => [
       ...prev,
       {
         role: 'user',
-        text: text.trim(),
+        text: trimmed,
         time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
       }
     ]);
 
     try {
+      // 1. Process with client-side conversation state machine
       if (machineRef.current) {
-        await machineRef.current.processUtterance(text);
-        syncState(prev => ({
-          ...prev,
-          todos: JSON.parse(JSON.stringify(userState.todos || [])),
-          customHabits: JSON.parse(JSON.stringify(userState.customHabits || [])),
-          waterGlasses: userState.waterGlasses,
-          waterMl: (userState.waterGlasses || 6) * 250,
-          movementLogs: JSON.parse(JSON.stringify(userState.movementLogs || []))
-        }));
+        await machineRef.current.processUtterance(trimmed);
       }
+
+      // 2. Persist message to backend /api/aria/message for isolated user storage
+      try {
+        await fetch('/api/aria/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ text: trimmed })
+        });
+      } catch (apiErr) {
+        console.log('[Aria] Backend sync notice:', apiErr);
+      }
+
+      // 3. Update local Momentum UI state
+      syncState(prev => ({
+        ...prev,
+        todos: JSON.parse(JSON.stringify(userState.todos || [])),
+        customHabits: JSON.parse(JSON.stringify(userState.customHabits || [])),
+        waterGlasses: userState.waterGlasses,
+        waterMl: (userState.waterGlasses || 6) * 250,
+        movementLogs: JSON.parse(JSON.stringify(userState.movementLogs || []))
+      }));
     } catch (err) {
-      console.error('Error processing voice utterance:', err);
+      console.error('[Aria] Error processing voice utterance:', err);
       setAriaResponse("I encountered a gentle pause processing that. Please feel free to try again.");
       setOrbState('error');
+      orbStateRef.current = 'error';
+      setTimeout(() => {
+        setOrbState('idle');
+        orbStateRef.current = 'idle';
+      }, 2500);
     }
   };
 
+  // Start active speech listening
+  const startListening = async () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      if (showToast) {
+        showToast('Speech recognition is not supported in this browser. You can type any command below.');
+      }
+      return;
+    }
+
+    // Stop any existing recognition instance
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (e) {}
+      recognitionRef.current = null;
+    }
+
+    // 1. Acquire microphone stream for permission and visualizer
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStreamRef.current = stream;
+        setupAudioAnalyser(stream);
+      }
+    } catch (micErr) {
+      console.warn('[Aria] Microphone permission blocked:', micErr);
+      setOrbState('permission-denied');
+      orbStateRef.current = 'permission-denied';
+      return;
+    }
+
+    // 2. Initialize SpeechRecognition
+    try {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+      rec.lang = 'en-US';
+
+      transcriptAccumulatorRef.current = '';
+      setTranscript('');
+
+      rec.onstart = () => {
+        setOrbState('listening');
+        orbStateRef.current = 'listening';
+      };
+
+      rec.onresult = (e) => {
+        let interim = '';
+        let final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const result = e.results[i];
+          if (result.isFinal) {
+            final += result[0].transcript;
+          } else {
+            interim += result[0].transcript;
+          }
+        }
+        const current = final || interim;
+        if (current) {
+          transcriptAccumulatorRef.current = current;
+          setTranscript(current);
+        }
+      };
+
+      rec.onend = () => {
+        cleanupAudioStream();
+        const heard = transcriptAccumulatorRef.current.trim();
+        if (heard && orbStateRef.current === 'listening') {
+          handleProcessCommand(heard);
+        } else if (orbStateRef.current === 'listening') {
+          setOrbState('idle');
+          orbStateRef.current = 'idle';
+        }
+      };
+
+      rec.onerror = (e) => {
+        console.warn('[Aria Speech Error]', e.error);
+        cleanupAudioStream();
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          setOrbState('permission-denied');
+          orbStateRef.current = 'permission-denied';
+        } else if (e.error === 'no-speech') {
+          const heard = transcriptAccumulatorRef.current.trim();
+          if (heard) {
+            handleProcessCommand(heard);
+          } else {
+            setOrbState('idle');
+            orbStateRef.current = 'idle';
+            if (showToast) {
+              showToast("Aria didn't catch that. Tap the mic and speak when you're ready.");
+            }
+          }
+        } else if (e.error === 'aborted') {
+          if (orbStateRef.current === 'listening') {
+            setOrbState('idle');
+            orbStateRef.current = 'idle';
+          }
+        } else {
+          setOrbState('error');
+          orbStateRef.current = 'error';
+          setTimeout(() => {
+            setOrbState('idle');
+            orbStateRef.current = 'idle';
+          }, 2500);
+        }
+      };
+
+      recognitionRef.current = rec;
+      rec.start();
+    } catch (startErr) {
+      console.error('[Aria] Failed to start recognition:', startErr);
+      cleanupAudioStream();
+      setOrbState('idle');
+      orbStateRef.current = 'idle';
+    }
+  };
+
+  // Toggle Microphone Button
   const handleToggleMic = () => {
     if (orbState === 'listening') {
-      if (recognitionRef.current) recognitionRef.current.stop();
-      handleProcessCommand(transcript);
-    } else {
-      setTranscript('');
-      try {
-        if (recognitionRef.current) {
-          recognitionRef.current.start();
-          setOrbState('listening');
-        } else {
-          showToast('Speech recognition not available on this browser.');
-        }
-      } catch (e) {
-        setOrbState('idle');
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
       }
+      cleanupAudioStream();
+      const heard = transcriptAccumulatorRef.current.trim();
+      if (heard) {
+        handleProcessCommand(heard);
+      } else {
+        setOrbState('idle');
+        orbStateRef.current = 'idle';
+      }
+    } else {
+      startListening();
     }
   };
 
@@ -274,9 +479,16 @@ export default function VoicePage() {
     handleProcessCommand(txt);
   };
 
+  // Auto-scroll chat history
+  useEffect(() => {
+    if (historyBottomRef.current) {
+      historyBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [history]);
+
   return (
     <PageShell centered>
-      {/* ── Page Header with Brand Green Eyebrow (No Cyan!) ── */}
+      {/* ── Page Header with Brand Green Eyebrow ── */}
       <PageHeader
         eyebrow="CONVERSATIONAL SANCTUARY"
         title="Aria Voice Sanctuary"
@@ -284,8 +496,18 @@ export default function VoicePage() {
         centered
       />
 
+      {/* Browser Speech Compatibility Notice */}
+      {!isSpeechSupported && (
+        <div className="w-full max-w-md p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 flex items-start gap-2 mb-4">
+          <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+          <span>
+            Microphone speech recognition is optimized for Chrome, Edge, and Safari. You can use the text command input below on any browser!
+          </span>
+        </div>
+      )}
+
       {/* ── Central Living Orb & Smooth Radial Glow ── */}
-      <div className="relative my-8 sm:my-10 w-72 h-72 flex items-center justify-center">
+      <div className="relative my-8 sm:my-10 w-72 h-72 flex flex-col items-center justify-center">
         {/*
           Smooth Radial Gradient Aura:
           Fades fully to transparent from center outward (0% to 70%), eliminating any hard clipping edges
@@ -373,6 +595,20 @@ export default function VoicePage() {
           )}
         </motion.button>
       </div>
+
+      {/* Live Speech Recognition Transcript Pill */}
+      {orbState === 'listening' && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 px-4 py-2 rounded-full bg-surface-container-lowest hairline shadow-xs text-xs font-medium text-[#0F6E56] max-w-sm text-center flex items-center gap-2"
+        >
+          <span className="w-2 h-2 rounded-full bg-[#0F6E56] animate-ping" />
+          <span className="truncate">
+            {transcript ? `"${transcript}"` : 'Aria is listening... Speak freely'}
+          </span>
+        </motion.div>
+      )}
 
       {/* Permission Denied Friendly Banner */}
       {orbState === 'permission-denied' && (

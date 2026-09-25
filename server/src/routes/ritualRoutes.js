@@ -18,8 +18,10 @@ ritualRoutes.use(requireAuth);
 
 ritualRoutes.get('/', RitualController.getRituals);
 ritualRoutes.post('/', validateRequest({ bodySchema: createRitualSchema }), RitualController.createRitual);
+ritualRoutes.post('/batch', RitualController.createRitualsBatch);
 ritualRoutes.put('/:id', RitualController.updateRitual);
 ritualRoutes.delete('/:id', RitualController.deleteRitual);
 
 ritualRoutes.post('/:id/checkin', RitualController.checkinRitual);
 ritualRoutes.post('/:id/skip', RitualController.skipRitual);
+ritualRoutes.post('/:id/uncheck', RitualController.uncheckRitual);

@@ -10,6 +10,7 @@ const createSessionSchema = z.object({
   plannedMin: z.number().int().min(1).max(480),
   actualMin: z.number().int().min(0).max(480).optional(),
   intention: z.string().max(200).optional(),
+  tag: z.string().max(200).optional(),
   startedAt: z.string().optional(),
   endedAt: z.string().optional(),
   completed: z.boolean().optional()

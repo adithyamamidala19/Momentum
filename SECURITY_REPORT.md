@@ -116,4 +116,19 @@ All credentials are provided strictly via environment variables parsed and valid
 1. **Right to Portability (GDPR Art. 20):**
    - Implemented `GET /api/profile/export`. Generates a complete JSON archive of all habits, logs, sessions, workouts, to-dos, and scores tied to the authenticated user.
 2. **Right to Erasure / Deletion (GDPR Art. 17):**
-   - Implemented `DELETE /api/profile/account`. Executes an atomic cascade deletion deleting documents across all 14 MongoDB collections (`users`, `rituals`, `ritualLogs`, `todos`, `hydrationLogs`, `proteinLogs`, `focusSessions`, `workouts`, `exercises`, `personalRecords`, `cardioLogs`, `ariaMessages`, `weeklyScores`, `medals`), followed by deleting the user record from Firebase Authentication and clearing the session cookie.
+   - Implemented `DELETE /api/profile/account`. Executes an atomic cascade deletion deleting documents across all 19 MongoDB collections (`users`, `rituals`, `ritualLogs`, `todos`, `hydrationLogs`, `proteinLogs`, `focusSessions`, `workouts`, `exercises`, `personalRecords`, `cardioLogs`, `ariaMessages`, `weeklyScores`, `medals`, `friendrequests`, `friendships`, `conversations`, `messages`, `blocks`, `reports`, `sharelogs`), followed by deleting the user record from Firebase Authentication and clearing the session cookie.
+
+---
+
+## 7. Social, Chat & Trust & Safety Controls
+
+| Feature | Threat Vector | Technical Enforcement | Verification Status |
+| :--- | :--- | :--- | :--- |
+| **Public Profile DTO** | PII or health metric leakage to other challenge participants | Separate, restricted serializer (`ProfileController.getPublicProfile`). Returns only nickname, avatar, bio, streak, rank/percentile, and safe earned medals. Never transmits legal name, email, age, weight, gender, hydration/protein logs, or cryptographic codes. | **Verified via automated suite** |
+| **Friend Request Opt-In** | Unsolicited direct messaging / spam | Two-step opt-in required. Mutual `Friendship` record must exist before a `Conversation` can be created or messaged. Single-direction requests cannot open a message stream. | **Verified via automated suite** |
+| **Automated Contact-Info Shield** | Sharing external contact details (phone, email, social handles) | Server- and client-side multi-regex filter (`validateSafeContent`). Blocks phone formats, email addresses, and social handles (`@`, `ig:`, `snap:`, `discord:`, `t.me`). Rejection response returns user safety notice with zero disk persistence. | **Verified via automated suite** |
+| **Bidirectional Blocking** | Harassment, stalking, or unwanted contact | `Block` collection checked across all endpoints (`/profile/public/:nickname`, `/friends/request`, `/chat/message`). Blocked profiles return 404 (hidden), and messages are rejected with 403. Blocked users receive no notification. | **Verified via automated suite** |
+| **10-Second Undo Retract** | Accidental message dispatch | `POST /api/chat/message/undo-delete` verifies `(Date.now() - createdAt) <= 10000ms`. Expired requests are strictly rejected. Retracted messages are excluded from history queries. | **Verified via automated suite** |
+| **Socket.io Security** | Unauthorized room eavesdropping | Handshake verifies `sessionToken` cookie with MongoDB session record; users can only join rooms matching their authenticated 1:1 `conversationId`. | **Verified** |
+| **Rate Limiting** | Spamming friend requests or messages | Express rate limiting protects `/api/friends/request` (10 req/min) and `/api/chat/message` (30 req/min) to prevent spam floods. | **Verified** |
+

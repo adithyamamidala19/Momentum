@@ -10,8 +10,7 @@ const medalSchema = new mongoose.Schema(
     },
     medalId: {
       type: String,
-      required: true,
-      enum: ['streak-3', 'streak-7', 'streak-14', 'streak-30', 'streak-60', 'streak-100', 'focus-100', 'iron-ritual', 'first-workout']
+      required: true
     },
     title: {
       type: String,
@@ -19,12 +18,21 @@ const medalSchema = new mongoose.Schema(
     },
     tier: {
       type: String,
-      enum: ['bronze', 'silver', 'gold', 'emerald'],
+      enum: ['bronze', 'silver', 'gold', 'platinum', 'emerald'],
       default: 'bronze'
     },
     earnedDate: {
       type: String, // YYYY-MM-DD
       required: true
+    },
+    verificationCode: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+    sharedCount: {
+      type: Number,
+      default: 0
     }
   },
   {

@@ -1,7 +1,9 @@
+import http from 'http';
 import { app } from './app.js';
 import { env } from './src/config/env.js';
 import { connectDatabase } from './src/config/database.js';
 import { initFirebase } from './src/config/firebase.js';
+import { initSocketIO } from './src/socket/chatSocket.js';
 import { logger } from './src/utils/logger.js';
 
 async function bootstrap() {
@@ -14,10 +16,14 @@ async function bootstrap() {
       logger.warn({ msg: 'Database connection deferred until MongoDB Atlas is available or local replica is online', err: err.message });
     });
 
-    // 3. Start Express server
-    const server = app.listen(env.PORT, () => {
+    // 3. Create HTTP server & bind Socket.io
+    const httpServer = http.createServer(app);
+    initSocketIO(httpServer);
+
+    // 4. Start HTTP & WebSocket server
+    const server = httpServer.listen(env.PORT, () => {
       logger.info({
-        msg: `🌿 Momentum API Server running in ${env.NODE_ENV} mode`,
+        msg: `🌿 Momentum API + Socket.io Server running in ${env.NODE_ENV} mode`,
         port: env.PORT,
         healthCheck: `http://localhost:${env.PORT}/api/health`,
         readyCheck: `http://localhost:${env.PORT}/api/ready`

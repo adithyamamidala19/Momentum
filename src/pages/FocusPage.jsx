@@ -36,6 +36,27 @@ export default function FocusPage() {
   const [focusStage, setFocusStage] = useState('idle');
   const [countdownNum, setCountdownNum] = useState(3);
 
+  // Soundscape Presets
+  const SOUNDSCAPE_PRESETS = [
+    { id: 'forest', label: 'Forest Rain', icon: '🌿' },
+    { id: 'ocean', label: 'Ocean Waves', icon: '🌊' },
+    { id: 'alpha', label: 'Binaural Alpha', icon: '🧘' },
+    { id: 'relief', label: 'Peaceful Relief', fullLabel: 'Peaceful Stress Relief', icon: '🕊️' }
+  ];
+
+  const getSoundLabel = (presetId) => {
+    switch (presetId) {
+      case 'forest': return 'Forest Rain';
+      case 'ocean': return 'Ocean Waves';
+      case 'alpha':
+      case 'binaural': return 'Binaural Alpha';
+      case 'relief':
+      case 'peaceful':
+      case 'stress-relief': return 'Peaceful Stress Relief';
+      default: return 'Harmonic Soundscape';
+    }
+  };
+
   // Soundscape
   const [soundscapePreset, setSoundscapePreset] = useState('forest');
   const [soundscapePlaying, setSoundscapePlaying] = useState(false);
@@ -47,17 +68,20 @@ export default function FocusPage() {
   useEffect(() => {
     if (isRunning && remainingSec > 0) {
       timerRef.current = setInterval(() => {
-        setRemainingSec(prev => {
-          if (prev <= 1) {
-            handleCompleteFocus();
-            return 0;
-          }
-          return prev - 1;
-        });
+        setRemainingSec(prev => Math.max(0, prev - 1));
       }, 1000);
+    } else if (isRunning && remainingSec === 0) {
+      handleCompleteFocus();
     }
     return () => clearInterval(timerRef.current);
   }, [isRunning, remainingSec]);
+
+  // Stop audio on page unmount
+  useEffect(() => {
+    return () => {
+      try { MeditativeAudio.stopTone(); } catch (e) {}
+    };
+  }, []);
 
   // Handle Preset Click
   const handleSelectPreset = (mins) => {
@@ -81,6 +105,7 @@ export default function FocusPage() {
   };
 
   const handleProceedFromEarphones = () => {
+    try { MeditativeAudio.ensureContext(); } catch (e) {}
     setFocusStage('countdown');
     setCountdownNum(3);
 
@@ -99,12 +124,12 @@ export default function FocusPage() {
         clearInterval(interval);
         setFocusStage('focused');
         setIsRunning(true);
-        if (soundscapePlaying) {
-          try {
-            MeditativeAudio.startTone();
-            MeditativeAudio.setVolume(volume);
-          } catch (e) {}
-        }
+        try {
+          MeditativeAudio.ensureContext();
+          MeditativeAudio.setVolume(volume);
+          MeditativeAudio.startTone(soundscapePreset);
+          setSoundscapePlaying(true);
+        } catch (e) {}
       }
     }, 1000);
   };
@@ -112,13 +137,44 @@ export default function FocusPage() {
   const handleTogglePlayPause = () => {
     setIsRunning(prev => {
       const next = !prev;
-      if (next && soundscapePlaying) {
-        try { MeditativeAudio.startTone(); } catch (e) {}
+      if (next) {
+        if (soundscapePlaying) {
+          try {
+            MeditativeAudio.setVolume(volume);
+            MeditativeAudio.startTone(soundscapePreset);
+          } catch (e) {}
+        }
       } else {
-        try { MeditativeAudio.stopTone(); } catch (e) {}
+        if (soundscapePlaying) {
+          try { MeditativeAudio.stopTone(); } catch (e) {}
+        }
       }
       return next;
     });
+  };
+
+  const handleSelectSoundscapePreset = (presetId) => {
+    // If user clicks the sound currently playing, toggle pause
+    if (soundscapePreset === presetId && soundscapePlaying) {
+      try {
+        MeditativeAudio.stopTone();
+        setSoundscapePlaying(false);
+      } catch (e) {}
+      return;
+    }
+
+    setSoundscapePreset(presetId);
+    try {
+      MeditativeAudio.ensureContext();
+      MeditativeAudio.setVolume(volume);
+      MeditativeAudio.startTone(presetId);
+      setSoundscapePlaying(true);
+      if (showToast) {
+        showToast(`Soundscape: ${getSoundLabel(presetId)} playing`);
+      }
+    } catch (e) {
+      console.error('[FocusPage] Play soundscape error:', e);
+    }
   };
 
   const handleToggleSoundscape = () => {
@@ -126,9 +182,15 @@ export default function FocusPage() {
       const next = !prev;
       if (next) {
         try {
-          MeditativeAudio.startTone();
+          MeditativeAudio.ensureContext();
           MeditativeAudio.setVolume(volume);
-        } catch (e) {}
+          MeditativeAudio.startTone(soundscapePreset);
+          if (showToast) {
+            showToast(`Soundscape: ${getSoundLabel(soundscapePreset)} playing`);
+          }
+        } catch (e) {
+          console.error('[FocusPage] Toggle soundscape error:', e);
+        }
       } else {
         try {
           MeditativeAudio.stopTone();
@@ -145,6 +207,7 @@ export default function FocusPage() {
       MeditativeAudio.stopTone();
       MeditativeAudio.playChime(528);
     } catch (e) {}
+    setSoundscapePlaying(false);
     const completedMins = Math.round((selectedDuration * 60 - remainingSec) / 60) || selectedDuration;
     addFocusMinutes(completedMins, focusIntention);
     setFocusStage('completed');
@@ -154,6 +217,7 @@ export default function FocusPage() {
     setIsRunning(false);
     clearInterval(timerRef.current);
     try { MeditativeAudio.stopTone(); } catch (e) {}
+    setSoundscapePlaying(false);
     setRemainingSec(selectedDuration * 60);
     setFocusStage('idle');
   };
@@ -409,25 +473,29 @@ export default function FocusPage() {
         </div>
 
         {/* Soundscape Preset Options */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {[
-            { id: 'forest', label: 'Forest Rain' },
-            { id: 'ocean', label: 'Ocean Waves' },
-            { id: 'alpha', label: 'Binaural Alpha' }
-          ].map(snd => (
-            <button
-              key={snd.id}
-              type="button"
-              onClick={() => setSoundscapePreset(snd.id)}
-              className={`py-2 px-2 rounded-xl text-xs font-medium text-center cursor-pointer border-0 transition-colors ${
-                soundscapePreset === snd.id
-                  ? 'bg-primary-container text-white font-semibold'
-                  : 'bg-surface-container text-outline hover:text-on-surface'
-              }`}
-            >
-              {snd.label}
-            </button>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          {SOUNDSCAPE_PRESETS.map(snd => {
+            const isSelected = soundscapePreset === snd.id;
+            const isPlayingThis = isSelected && soundscapePlaying;
+            return (
+              <button
+                key={snd.id}
+                type="button"
+                onClick={() => handleSelectSoundscapePreset(snd.id)}
+                className={`py-2 px-2 rounded-xl text-xs font-medium text-center cursor-pointer border transition-all flex items-center justify-center gap-1.5 ${
+                  isPlayingThis
+                    ? 'bg-primary-container text-white font-semibold border-primary-container shadow-xs'
+                    : isSelected
+                    ? 'bg-primary-container/20 text-primary-container font-semibold border-primary-container/30'
+                    : 'bg-surface-container text-outline hover:text-on-surface border-transparent'
+                }`}
+                title={`${snd.fullLabel || snd.label} - ${isPlayingThis ? 'Currently playing (tap to pause)' : 'Tap to play'}`}
+              >
+                <span>{snd.icon}</span>
+                <span className="truncate">{snd.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Volume Slider */}

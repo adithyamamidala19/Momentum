@@ -9,10 +9,13 @@ export const authRoutes = Router();
 
 // Zod validation schemas
 const sessionSchema = z.object({
-  idToken: z.string().min(1, 'idToken is required')
+  idToken: z.string().min(1, 'idToken is required'),
+  username: z.string().max(50).optional()
 }).strict();
 
 // Routes
+authRoutes.get('/check-username', AuthController.checkUsername);
+
 authRoutes.post(
   '/session',
   authLimiter,
@@ -30,3 +33,4 @@ authRoutes.get(
   requireAuth,
   AuthController.getMe
 );
+

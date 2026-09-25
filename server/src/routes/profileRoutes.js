@@ -10,6 +10,13 @@ const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   mantra: z.string().max(200).optional(),
   timezone: z.string().max(100).optional(),
+  age: z.number().int().min(13).max(120).nullable().optional(),
+  weightKg: z.number().min(20).max(500).nullable().optional(),
+  gender: z.enum(['Male', 'Female', 'Non-binary', 'Prefer not to say', '']).optional(),
+  photoType: z.enum(['google', 'avatar', 'custom', '']).optional(),
+  photoURL: z.string().optional(),
+  avatarEmblem: z.string().optional(),
+  onboardingCompleted: z.boolean().optional(),
   units: z.object({
     weight: z.enum(['kg', 'lb']).optional(),
     volume: z.enum(['ml', 'oz']).optional()
@@ -22,8 +29,11 @@ const updateProfileSchema = z.object({
   challenge: z.object({
     optedIn: z.boolean().optional(),
     nickname: z.string().max(50).optional(),
-    avatar: z.string().max(10).optional()
+    avatar: z.string().max(10).optional(),
+    bio: z.string().max(150).optional()
   }).optional(),
+  username: z.string().max(50).optional(),
+  showOnlineStatus: z.boolean().optional(),
   notificationPrefs: z.object({
     quietStart: z.string().optional(),
     quietEnd: z.string().optional(),
@@ -33,6 +43,11 @@ const updateProfileSchema = z.object({
 }).strict();
 
 profileRoutes.use(requireAuth);
+
+profileRoutes.get('/check-username', ProfileController.checkUsername);
+profileRoutes.get('/public/:nickname', ProfileController.getPublicProfile);
+
+profileRoutes.post('/photo', ProfileController.uploadPhoto);
 
 profileRoutes.put(
   '/',

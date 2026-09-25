@@ -9,10 +9,12 @@ export class ChallengeService {
    */
   static async getWeeklyLeaderboard({ weekId = getIsoWeekId(new Date()), sortBy = 'weeklyScore', currentUserId = null }) {
     let sortStage = { weeklyScore: -1 };
-    if (sortBy === 'practice') {
+    if (sortBy === 'practice' || sortBy === 'practiceScore' || sortBy === 'practicePoints') {
       sortStage = { practicePoints: -1 };
-    } else if (sortBy === 'adherence') {
+    } else if (sortBy === 'adherence' || sortBy === 'adherenceAvg') {
       sortStage = { adherenceAvg: -1 };
+    } else if (sortBy === 'focus' || sortBy === 'focusMins' || sortBy === 'focusMinutes') {
+      sortStage = { focusMinutes: -1 };
     }
 
     // Aggregation pipeline on weeklyScores index
@@ -34,27 +36,46 @@ export class ChallengeService {
       }
     ];
 
-    const participants = await WeeklyScore.aggregate(pipeline);
+    let participants = await WeeklyScore.aggregate(pipeline);
+
+    // If current week has no records yet, dynamically populate from opted-in users
+    if (participants.length === 0) {
+      const optedInUsers = await User.find({ 'challenge.optedIn': true }).limit(25);
+      if (optedInUsers.length > 0) {
+        await Promise.all(optedInUsers.map((u) => MetricsService.updateWeeklyScore(u).catch(() => {})));
+        participants = await WeeklyScore.aggregate(pipeline);
+      }
+    }
 
     // Compute 1-indexed ranks and flag current user
     let userRank = null;
     const rankedParticipants = participants.map((p, index) => {
-      const isCurrentUser = currentUserId && p.userId.toString() === currentUserId.toString();
+      const isCurrentUser = currentUserId && p.userId?.toString() === currentUserId.toString();
       const rank = index + 1;
       if (isCurrentUser) userRank = rank;
+
+      const practiceVal = typeof p.practicePoints === 'number' ? p.practicePoints : 0;
+      const weeklyVal = typeof p.weeklyScore === 'number' ? p.weeklyScore : 0;
+      const adherenceVal = typeof p.adherenceAvg === 'number' ? p.adherenceAvg : 0;
+      const focusVal = typeof p.focusMinutes === 'number' ? p.focusMinutes : 0;
 
       return {
         rank,
         id: p._id,
-        nickname: p.nickname,
-        avatar: p.avatar,
-        practicePoints: p.practicePoints,
-        adherence: p.adherenceAvg,
-        focusMins: p.focusMinutes,
-        weeklyScore: p.weeklyScore,
+        userId: p.userId,
+        nickname: p.nickname || 'Practitioner',
+        avatar: p.avatar || '🌱',
+        practicePoints: practiceVal,
+        practiceScore: practiceVal, // Complete drop-in alias for frontend compatibility
+        adherence: adherenceVal,
+        adherenceAvg: adherenceVal,
+        focusMins: focusVal,
+        focusMinutes: focusVal,
+        weeklyScore: weeklyVal,
         isCurrentUser: Boolean(isCurrentUser)
       };
     });
+
 
     const isWarmEmpty = rankedParticipants.length < 3;
 

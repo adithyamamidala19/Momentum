@@ -45,6 +45,40 @@ export class HydrationController {
     });
   }
 
+  static async removeLatest(req, res) {
+    const today = getLocalDateString(new Date(), req.user.timezone);
+    const latest = await HydrationLog.findOne({ userId: req.user._id, date: today }).sort({ loggedAt: -1 });
+
+    if (latest) {
+      await HydrationLog.deleteOne({ _id: latest._id });
+    }
+
+    MetricsService.updateWeeklyScore(req.user).catch(() => {});
+    const overview = await MetricsService.getTodayOverview(req.user);
+    return res.status(200).json({ success: true, overview });
+  }
+
+  static async setWater(req, res) {
+    const { targetMl } = req.body;
+    const today = getLocalDateString(new Date(), req.user.timezone);
+
+    await HydrationLog.deleteMany({ userId: req.user._id, date: today });
+    let log = null;
+    const ml = Number(targetMl) || 0;
+    if (ml > 0) {
+      log = await HydrationLog.create({
+        userId: req.user._id,
+        amountMl: ml,
+        date: today,
+        loggedAt: new Date()
+      });
+    }
+
+    MetricsService.updateWeeklyScore(req.user).catch(() => {});
+    const overview = await MetricsService.getTodayOverview(req.user);
+    return res.status(200).json({ success: true, log, overview });
+  }
+
   static async deleteHydrationLog(req, res) {
     const { id } = req.params;
     const log = await HydrationLog.findOneAndDelete({ _id: id, userId: req.user._id });

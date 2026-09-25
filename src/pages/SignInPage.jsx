@@ -13,8 +13,8 @@ export default function SignInPage({ setView }) {
     setLocalError(null);
     try {
       await loginWithGoogle();
-      // Redirect back to intended page or today
-      const destination = intendedRoute && intendedRoute !== 'signin' ? intendedRoute : 'today';
+      // Redirect back to intended page or today (never home for authenticated users)
+      const destination = intendedRoute && intendedRoute !== 'signin' && intendedRoute !== 'home' ? intendedRoute : 'today';
       setView(destination);
     } catch (err) {
       setLocalError(err.message || 'Unable to sign in. Please try again.');

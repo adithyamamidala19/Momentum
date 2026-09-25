@@ -44,3 +44,7 @@ export const getAuth = () => {
   if (!firebaseApp) initFirebase();
   return admin.auth();
 };
+
+export function hasFirebaseCredentials() {
+  return Boolean(env.FIREBASE_CLIENT_EMAIL && env.getFormattedPrivateKey());
+}

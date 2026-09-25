@@ -25,6 +25,11 @@ import { milestoneRoutes } from './src/routes/milestoneRoutes.js';
 import { challengeRoutes } from './src/routes/challengeRoutes.js';
 import { scanRoutes } from './src/routes/scanRoutes.js';
 import { ariaRoutes } from './src/routes/ariaRoutes.js';
+import { onboardingRoutes } from './src/routes/onboardingRoutes.js';
+import { friendRoutes } from './src/routes/friendRoutes.js';
+import { chatRoutes } from './src/routes/chatRoutes.js';
+import { moderationRoutes } from './src/routes/moderationRoutes.js';
+import { achievementRoutes } from './src/routes/achievementRoutes.js';
 
 export const app = express();
 
@@ -41,7 +46,8 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      const isLocalDev = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+      if (isLocalDev || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -53,9 +59,9 @@ app.use(
   })
 );
 
-// Body parsing with safe size limits
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+// Body parsing with safe size limits (supports optimized avatar base64 images for MongoDB)
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(cookieParser());
 
 // Prevent NoSQL injection by sanitizing query and body keys ($ and .)
@@ -86,6 +92,11 @@ app.use('/api/milestones', milestoneRoutes);
 app.use('/api/challenge', challengeRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/aria', ariaRoutes);
+app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/moderation', moderationRoutes);
+app.use('/api/achievements', achievementRoutes);
 
 // Catch-all 404 for undefined API routes
 app.use('/api/*', (req, res) => {

@@ -1,4 +1,5 @@
-import { getAuth } from '../config/firebase.js';
+import jwt from 'jsonwebtoken';
+import { getAuth, hasFirebaseCredentials } from '../config/firebase.js';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { logger } from '../utils/logger.js';
@@ -23,31 +24,46 @@ export async function requireAuth(req, res, next) {
       });
     }
 
-    // Verify session cookie with Firebase Admin (checkRevoked: true)
-    let decodedClaims;
-    try {
-      const auth = getAuth();
-      decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    } catch (verifyError) {
-      logger.warn({
-        msg: 'Failed to verify session cookie',
-        errCode: verifyError.code,
-        message: verifyError.message
-      });
+    let decodedClaims = null;
+    const hasCreds = hasFirebaseCredentials();
 
-      // Clear the invalid session cookie
-      res.clearCookie(env.SESSION_COOKIE_NAME, {
-        path: '/',
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        domain: env.COOKIE_DOMAIN || undefined
-      });
+    // 1. If service account credentials exist, attempt official Firebase session verification
+    if (hasCreds) {
+      try {
+        const auth = getAuth();
+        decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+      } catch (verifyError) {
+        logger.debug({
+          msg: 'Firebase Admin verifySessionCookie failed, falling back to local JWT check',
+          err: verifyError.message
+        });
+      }
+    }
 
-      return res.status(401).json({
-        error: 'Unauthorized: Session has expired or been revoked. Please sign in again.',
-        code: 'SESSION_REVOKED'
-      });
+    // 2. If not verified via Firebase Admin, verify with local session secret
+    if (!decodedClaims) {
+      try {
+        decodedClaims = jwt.verify(sessionCookie, env.SESSION_SECRET);
+      } catch (jwtError) {
+        logger.warn({
+          msg: 'Session cookie verification failed',
+          err: jwtError.message
+        });
+
+        // Clear the invalid session cookie
+        res.clearCookie(env.SESSION_COOKIE_NAME, {
+          path: '/',
+          httpOnly: true,
+          secure: env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          domain: env.COOKIE_DOMAIN || undefined
+        });
+
+        return res.status(401).json({
+          error: 'Unauthorized: Session has expired or been revoked. Please sign in again.',
+          code: 'SESSION_REVOKED'
+        });
+      }
     }
 
     // Find the user in MongoDB by firebaseUid

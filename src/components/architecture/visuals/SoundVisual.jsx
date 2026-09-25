@@ -30,6 +30,7 @@ export default function SoundVisual({ isVisible = true }) {
     { id: 'forest', label: '🌿 Forest Rain', freq: 'Pink Noise' },
     { id: 'ocean', label: '🌊 Ocean Waves', freq: 'Brown Noise' },
     { id: 'binaural', label: '🧘 Binaural Alpha', freq: '10Hz Theta' },
+    { id: 'relief', label: '🕊️ Stress Relief', freq: '528Hz Solfeggio' },
   ];
 
   return (
@@ -58,7 +59,7 @@ export default function SoundVisual({ isVisible = true }) {
       </div>
 
       {/* Procedural Sound Selector Cards with Mini Waveforms */}
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {soundOptions.map((s, index) => {
           const isSelected = activeSound === s.id;
           return (
