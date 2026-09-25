@@ -12,11 +12,21 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-const API_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
-  (typeof import.meta !== 'undefined' && import.meta.env?.REACT_APP_API_BASE_URL) ||
-  (typeof process !== 'undefined' && process.env?.REACT_APP_API_BASE_URL) ||
-  '/api';
+const getNormalizedApiBaseUrl = () => {
+  let raw =
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.REACT_APP_API_BASE_URL) ||
+    (typeof process !== 'undefined' && process.env?.REACT_APP_API_BASE_URL) ||
+    '/api';
+
+  raw = String(raw).trim().replace(/\/+$/, '');
+  if (raw.startsWith('http') && !raw.endsWith('/api')) {
+    raw += '/api';
+  }
+  return raw;
+};
+
+const API_BASE_URL = getNormalizedApiBaseUrl();
 
 // Callbacks for 401 handling
 let onUnauthorizedCallback = null;

@@ -47,7 +47,8 @@ app.use(
       // Allow requests with no origin (like mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
       const isLocalDev = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-      if (isLocalDev || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      const isRender = /^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin);
+      if (isLocalDev || isRender || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked for origin: ${origin}`));

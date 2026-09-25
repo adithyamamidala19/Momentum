@@ -212,9 +212,9 @@ export const RITUAL_LOOP = {
 // ── BACKGROUND LAYER ──────────────────────────────────────────────────────────
 export const BG = {
   /** Paths to botanical video / poster. Set to null to use CSS fallback only. */
-  videoWebm: '/assets/bg/bg-loop.webm',
-  videoMp4: '/assets/bg/bg-loop.mp4',
-  videoPoster: '/assets/bg/bg-poster.jpg',
+  videoWebm: null,
+  videoMp4: null,
+  videoPoster: null,
 
   /** Cream overlay on top of video (0–1). Higher = more cream, less video. */
   videoOverlayOpacity: 0.88,

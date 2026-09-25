@@ -54,7 +54,7 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
  */
 export async function signInWithGoogleAndGetIdToken() {
   try {
-    const result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+    const result = await signInWithPopup(auth, googleProvider);
     const idToken = await result.user.getIdToken();
 
     // Immediately sign out from Firebase client SDK to keep browser 100% stateless
