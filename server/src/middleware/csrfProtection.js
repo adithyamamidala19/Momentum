@@ -15,6 +15,12 @@ export function csrfProtection(req, res, next) {
     return next();
   }
 
+  // Requests explicitly authorized via Bearer header cannot be forged via cross-site browser ambient credentials
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
   const origin = req.headers['origin'];
   const referer = req.headers['referer'];
 

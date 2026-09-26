@@ -28,6 +28,21 @@ const getNormalizedApiBaseUrl = () => {
 
 const API_BASE_URL = getNormalizedApiBaseUrl();
 
+// In-memory auth token for cross-origin Bearer token fallback (Zero localStorage leak)
+let inMemoryAuthToken = null;
+
+export function setAuthToken(token) {
+  inMemoryAuthToken = token || null;
+}
+
+export function getAuthToken() {
+  return inMemoryAuthToken;
+}
+
+export function clearAuthToken() {
+  inMemoryAuthToken = null;
+}
+
 // Callbacks for 401 handling
 let onUnauthorizedCallback = null;
 
@@ -58,6 +73,11 @@ export async function apiRequest(endpoint, { method = 'GET', body, headers = {},
     'Cache-Control': 'no-store',
     ...headers
   };
+
+  // Attach in-memory Bearer token if available
+  if (inMemoryAuthToken && !requestHeaders['Authorization'] && !requestHeaders['authorization']) {
+    requestHeaders['Authorization'] = `Bearer ${inMemoryAuthToken}`;
+  }
 
   // Only set Content-Type: application/json if body is not FormData
   if (body && !(body instanceof FormData)) {

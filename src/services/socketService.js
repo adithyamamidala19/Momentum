@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { getAuthToken } from './apiClient.js';
 
 let socketInstance = null;
 let registeredUserId = null;
@@ -29,6 +30,9 @@ export function getSocket(userId = null) {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000,
+      auth: {
+        token: getAuthToken()
+      },
       query: registeredUserId ? { userId: registeredUserId } : {}
     });
 

@@ -4,6 +4,8 @@ import { User } from '../models/User.js';
 import { env } from '../config/env.js';
 import { isOriginAllowed } from '../utils/originHelper.js';
 
+import jwt from 'jsonwebtoken';
+
 let ioInstance = null;
 const onlineUsers = new Map(); // userId -> Set of socketIds
 
@@ -27,20 +29,32 @@ export function initSocketIO(httpServer) {
   // Socket middleware for user authentication
   io.use(async (socket, next) => {
     try {
-      const rawCookie = socket.handshake.headers.cookie;
-      if (!rawCookie) {
-        return next();
+      let sessionToken = socket.handshake.auth?.token;
+      if (!sessionToken && socket.handshake.headers?.authorization?.startsWith('Bearer ')) {
+        sessionToken = socket.handshake.headers.authorization.slice(7).trim();
       }
 
-      // Parse cookie
-      const match = rawCookie.match(new RegExp(`${env.SESSION_COOKIE_NAME}=([^;]+)`));
-      const sessionToken = match ? match[1] : null;
+      if (!sessionToken && socket.handshake.headers.cookie) {
+        const match = socket.handshake.headers.cookie.match(new RegExp(`${env.SESSION_COOKIE_NAME}=([^;]+)`));
+        if (match) {
+          sessionToken = match[1];
+        }
+      }
 
       if (sessionToken) {
-        // Find user by session
-        const user = await User.findOne({ sessionToken }).select('_id challenge.nickname showOnlineStatus');
-        if (user) {
-          socket.user = user;
+        let decoded = null;
+        try {
+          decoded = jwt.verify(sessionToken, env.SESSION_SECRET);
+        } catch {
+          decoded = jwt.decode(sessionToken);
+        }
+
+        const uid = decoded?.uid || decoded?.sub || decoded?.user_id;
+        if (uid) {
+          const user = await User.findOne({ firebaseUid: uid }).select('_id challenge.nickname showOnlineStatus');
+          if (user) {
+            socket.user = user;
+          }
         }
       }
       next();

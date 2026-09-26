@@ -66,14 +66,18 @@ export async function signInWithGoogleAndGetIdToken() {
       throw new Error('Sign-in was cancelled. Click "Continue with Google" whenever you are ready.');
     } else if (error.code === 'auth/popup-blocked') {
       throw new Error('Sign-in popup was blocked by your browser. Please allow popups for Momentum.');
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      throw new Error('Sign-in process was interrupted. Please click "Continue with Google" again.');
     } else if (error.code === 'auth/unauthorized-domain') {
-      throw new Error('This domain is not authorized in Firebase Console. Please add localhost (or your domain) under Authentication > Settings > Authorized domains.');
+      throw new Error('This domain is not authorized in Firebase Console. Please add your domain or localhost under Firebase Console > Authentication > Settings > Authorized domains.');
     } else if (error.code === 'auth/operation-not-allowed') {
       throw new Error('Google Sign-In is not enabled in Firebase. Please enable Google under Authentication > Sign-in method in Firebase Console.');
     } else if (error.code === 'auth/invalid-api-key' || error.code === 'auth/api-key-not-valid') {
       throw new Error('Firebase API key is invalid or not yet active. Please check your .env configuration.');
     } else if (error.code === 'auth/network-request-failed') {
       throw new Error('Network error during Google authentication. Please check your internet connection.');
+    } else if (error.code === 'auth/user-disabled') {
+      throw new Error('This user account has been disabled.');
     }
     throw error;
   }

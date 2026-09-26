@@ -6,7 +6,13 @@ import { logger } from '../utils/logger.js';
 
 export async function requireAuth(req, res, next) {
   try {
-    const sessionCookie = req.cookies?.[env.SESSION_COOKIE_NAME];
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    let bearerToken = null;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      bearerToken = authHeader.slice(7).trim();
+    }
+
+    const sessionCookie = bearerToken || req.cookies?.[env.SESSION_COOKIE_NAME];
 
     if (!sessionCookie) {
       // In development or test, support test bypass only if explicitly enabled
@@ -51,11 +57,12 @@ export async function requireAuth(req, res, next) {
         });
 
         // Clear the invalid session cookie
+        const isHttps = env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
         res.clearCookie(env.SESSION_COOKIE_NAME, {
           path: '/',
           httpOnly: true,
-          secure: env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          secure: isHttps,
+          sameSite: isHttps ? 'none' : 'lax',
           domain: env.COOKIE_DOMAIN || undefined
         });
 
@@ -66,13 +73,21 @@ export async function requireAuth(req, res, next) {
       }
     }
 
+    const uid = decodedClaims.uid || decodedClaims.sub || decodedClaims.user_id;
+    if (!uid) {
+      return res.status(401).json({
+        error: 'Unauthorized: Invalid token claims.',
+        code: 'INVALID_TOKEN'
+      });
+    }
+
     // Find the user in MongoDB by firebaseUid
-    let user = await User.findOne({ firebaseUid: decodedClaims.uid });
+    let user = await User.findOne({ firebaseUid: uid });
 
     if (!user) {
       // Upsert user if first time session verification
       user = await User.create({
-        firebaseUid: decodedClaims.uid,
+        firebaseUid: uid,
         email: decodedClaims.email || '',
         displayName: decodedClaims.name || 'Mindful Practitioner',
         photoURL: decodedClaims.picture || '',
@@ -81,8 +96,9 @@ export async function requireAuth(req, res, next) {
       logger.info({ msg: 'Created new user document in MongoDB', userId: user._id });
     }
 
-    // Attach user object to request
+    // Attach user object and token to request
     req.user = user;
+    req.authToken = sessionCookie;
     next();
   } catch (error) {
     logger.error({ msg: 'requireAuth unexpected error', err: error.message });

@@ -107,12 +107,13 @@ export class AuthController {
         await user.save();
       }
 
-      // 4. Set the httpOnly session cookie
+      // 4. Set the httpOnly session cookie with cross-site support
+      const isHttps = env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
       const cookieOptions = {
         maxAge: expiresIn,
         httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isHttps,
+        sameSite: isHttps ? 'none' : 'lax',
         path: '/',
         domain: env.COOKIE_DOMAIN || undefined
       };
@@ -141,6 +142,7 @@ export class AuthController {
           showOnlineStatus: user.showOnlineStatus !== false,
           onboardingCompleted: Boolean(user.onboardingCompleted)
         },
+        token: sessionCookie,
         isNewUser
       });
     } catch (error) {
@@ -169,11 +171,12 @@ export class AuthController {
       }
     }
 
+    const isHttps = env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
     res.clearCookie(env.SESSION_COOKIE_NAME, {
       path: '/',
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isHttps,
+      sameSite: isHttps ? 'none' : 'lax',
       domain: env.COOKIE_DOMAIN || undefined
     });
 
@@ -186,6 +189,7 @@ export class AuthController {
    */
   static async getMe(req, res) {
     const user = req.user;
+    const token = req.authToken || req.cookies?.[env.SESSION_COOKIE_NAME] || null;
     return res.status(200).json({
       user: {
         id: user._id,
@@ -209,7 +213,8 @@ export class AuthController {
         theme: user.theme,
         onboardingCompleted: Boolean(user.onboardingCompleted),
         createdAt: user.createdAt
-      }
+      },
+      token
     });
   }
 
