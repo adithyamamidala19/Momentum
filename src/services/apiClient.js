@@ -15,8 +15,11 @@
 const getNormalizedApiBaseUrl = () => {
   let raw =
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
     (typeof import.meta !== 'undefined' && import.meta.env?.REACT_APP_API_BASE_URL) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.REACT_APP_API_URL) ||
     (typeof process !== 'undefined' && process.env?.REACT_APP_API_BASE_URL) ||
+    (typeof process !== 'undefined' && process.env?.REACT_APP_API_URL) ||
     '/api';
 
   raw = String(raw).trim().replace(/\/+$/, '');

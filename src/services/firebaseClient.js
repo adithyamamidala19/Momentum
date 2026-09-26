@@ -20,7 +20,7 @@ const getEnv = (key, fallback = '') => {
 };
 
 const firebaseConfig = {
-  apiKey: getEnv('VITE_FIREBASE_API_KEY', getEnv('REACT_APP_FIREBASE_API_KEY', getEnv('FIREBASE_API_KEY', 'demo-api-key'))),
+  apiKey: getEnv('VITE_FIREBASE_API_KEY', getEnv('REACT_APP_FIREBASE_API_KEY', getEnv('FIREBASE_API_KEY', 'AIzaSyBDk7iKccw_YwmGo9DkqKkb-fx09ShZlJM'))),
   authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', getEnv('REACT_APP_FIREBASE_AUTH_DOMAIN', getEnv('FIREBASE_AUTH_DOMAIN', 'momentum-11.firebaseapp.com'))),
   projectId: getEnv('VITE_FIREBASE_PROJECT_ID', getEnv('REACT_APP_FIREBASE_PROJECT_ID', getEnv('FIREBASE_PROJECT_ID', 'momentum-11'))),
   storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', getEnv('REACT_APP_FIREBASE_STORAGE_BUCKET', getEnv('FIREBASE_STORAGE_BUCKET', 'momentum-11.firebasestorage.app'))),

@@ -18,6 +18,15 @@ export function isOriginAllowed(origin) {
   const isRender = /^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin);
   if (isRender) return true;
 
+  const isFirebase = /^https:\/\/[a-zA-Z0-9-]+\.(web\.app|firebaseapp\.com)$/.test(origin);
+  if (isFirebase) return true;
+
+  const isVercel = /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+  if (isVercel) return true;
+
+  const isNetlify = /^https:\/\/[a-zA-Z0-9-]+\.netlify\.app$/.test(origin);
+  if (isNetlify) return true;
+
   const allowedOrigins = env.getAllowedOrigins();
   if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
     return true;

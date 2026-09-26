@@ -16,7 +16,7 @@
     "test": "node --test tests/soundscape-audio.test.js tests/movement-upgrade.test.js tests/voice-todo.test.js tests/food-vision-scanner.test.js tests/storage-leak-audit.test.js tests/social-chat-moderation.test.js tests/insights-achievements.test.js tests/milestones-and-challenge-v2.test.js",
     "lint": "npx eslint js/**/*.js",
     "format": "npx prettier --write \"**/*.{html,css,js,json,md}\"",
-    "deploy": "firebase deploy"
+    "deploy": "vite build && firebase deploy"
   },
   "keywords": [
     "habit-tracker",

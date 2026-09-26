@@ -63,7 +63,8 @@ export async function requireAuth(req, res, next) {
           httpOnly: true,
           secure: isHttps,
           sameSite: isHttps ? 'none' : 'lax',
-          domain: env.COOKIE_DOMAIN || undefined
+          domain: env.COOKIE_DOMAIN || undefined,
+          partitioned: isHttps ? true : undefined
         });
 
         return res.status(401).json({

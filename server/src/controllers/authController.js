@@ -115,7 +115,8 @@ export class AuthController {
         secure: isHttps,
         sameSite: isHttps ? 'none' : 'lax',
         path: '/',
-        domain: env.COOKIE_DOMAIN || undefined
+        domain: env.COOKIE_DOMAIN || undefined,
+        partitioned: isHttps ? true : undefined
       };
 
       res.cookie(env.SESSION_COOKIE_NAME, sessionCookie, cookieOptions);
@@ -177,7 +178,8 @@ export class AuthController {
       httpOnly: true,
       secure: isHttps,
       sameSite: isHttps ? 'none' : 'lax',
-      domain: env.COOKIE_DOMAIN || undefined
+      domain: env.COOKIE_DOMAIN || undefined,
+      partitioned: isHttps ? true : undefined
     });
 
     return res.status(200).json({ success: true, message: 'Logged out successfully' });

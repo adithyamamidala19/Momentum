@@ -16,7 +16,7 @@ export function getSocket(userId = null) {
 
     // Prefer explicit env, or direct backend localhost:5000 in dev, or window.location.origin
     const socketUrl =
-      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
+      (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL)) ||
       (isLocalhost ? 'http://localhost:5000' : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000'));
 
     const normalizedUrl = socketUrl.replace(/\/api\/?$/, '');
