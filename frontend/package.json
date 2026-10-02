@@ -1,0 +1,53 @@
+{
+  "name": "momentum-frontend",
+  "version": "1.0.0",
+  "description": "Momentum — Mindful habit tracking and daily rhythm sanctuary frontend application.",
+  "type": "module",
+  "main": "src/main.jsx",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test tests/soundscape-audio.test.js tests/movement-upgrade.test.js tests/voice-todo.test.js tests/food-vision-scanner.test.js tests/storage-leak-audit.test.js tests/social-chat-moderation.test.js tests/insights-achievements.test.js tests/milestones-and-challenge-v2.test.js",
+    "lint": "npx eslint js/**/*.js src/**/*.{js,jsx}",
+    "format": "npx prettier --write \"**/*.{html,css,js,jsx,json,md}\"",
+    "generate-audio": "node scripts/generate-audio.js"
+  },
+  "keywords": [
+    "habit-tracker",
+    "mindfulness",
+    "vanilla-js",
+    "es-modules",
+    "web-audio",
+    "tailwind",
+    "firebase"
+  ],
+  "author": "Adithya Mamidala",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "eslint": "^9.10.0",
+    "prettier": "^3.3.3",
+    "serve": "^14.2.4"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.8.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.4.20",
+    "canvas-confetti": "^1.9.4",
+    "firebase": "^11.10.0",
+    "framer-motion": "^13.4.1",
+    "html-to-image": "^1.11.13",
+    "lenis": "^1.3.26",
+    "lucide-react": "^1.47.0",
+    "postcss": "^8.4.47",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "socket.io-client": "^4.8.4",
+    "tailwindcss": "^3.4.13",
+    "three": "^0.186.0",
+    "vite": "^8.3.0"
+  }
+}

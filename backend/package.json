@@ -1,7 +1,7 @@
 {
-  "name": "momentum-server",
+  "name": "momentum-backend",
   "version": "1.0.0",
-  "description": "Momentum API Server — Node, Express, Mongoose, Firebase Admin",
+  "description": "Momentum Backend API Server — Node, Express, Mongoose, Firebase Admin",
   "type": "module",
   "main": "server.js",
   "scripts": {

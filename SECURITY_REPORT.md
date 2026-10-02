@@ -2,7 +2,7 @@
 
 **Date:** September 2026  
 **Auditor / Roles:** Principal Full-Stack Engineer, Security Engineer, QA Lead  
-**Scope:** Client Application (`src/`), Express REST API (`server/`), Identity Provider (Firebase Auth), Database (MongoDB Atlas)  
+**Scope:** Client Application (`frontend/src/`), Express REST API (`backend/`), Identity Provider (Firebase Auth), Database (MongoDB Atlas)  
 **Status:** **PASSED / ZERO VULNERABILITIES DETECTED**
 
 ---
@@ -66,13 +66,13 @@ A full DevTools storage audit was conducted against the running application in G
 *Note: The only indexedDB database present is Firebase's internal SDK installation heartbeat (containing only an internal SDK ping timestamp, zero user data). `firebaseLocalStorageDb` has been completely eliminated by configuring `initializeAuth(app, { persistence: inMemoryPersistence })`.*
 
 ### Automated CI Safeguard
-The test suite `tests/storage-leak-audit.test.js` parses the entire `src/` directory tree, ensuring that no `localStorage`, `sessionStorage`, or `indexedDB` API calls exist anywhere in production source code, and that `.eslintrc.json` will fail any future pull request introducing storage persistence.
+The test suite `frontend/tests/storage-leak-audit.test.js` parses the entire `frontend/src/` directory tree, ensuring that no `localStorage`, `sessionStorage`, or `indexedDB` API calls exist anywhere in production source code, and that `.eslintrc.json` will fail any future pull request introducing storage persistence.
 
 ---
 
 ## 4. API Security & HTTP Headers
 
-Every API response from the Express server is configured with defensive headers via `server/src/middleware/securityHeaders.js`:
+Every API response from the Express server is configured with defensive headers via `backend/src/middleware/securityHeaders.js`:
 
 ```http
 Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
@@ -92,12 +92,12 @@ Referrer-Policy: strict-origin-when-cross-origin
 
 ### Dependency Audit
 ```bash
-# Client Audit
-$ npm audit
+# Frontend Audit
+$ cd frontend && npm audit
 found 0 vulnerabilities
 
-# Server Audit
-$ cd server && npm audit
+# Backend Audit
+$ cd backend && npm audit
 found 0 vulnerabilities
 ```
 
@@ -107,7 +107,7 @@ A repository-wide regex scan for API tokens, RSA private keys, MongoDB connectio
 "Secrets found": []
 ```
 
-All credentials are provided strictly via environment variables parsed and validated at startup using Zod schemas (`server/src/config/env.js`).
+All credentials are provided strictly via environment variables parsed and validated at startup using Zod schemas (`backend/src/config/env.js`).
 
 ---
 

@@ -17,7 +17,9 @@ test('🌿 Soundscape & Audio Tracks Test Suite', async (t) => {
       'peaceful-stress-relief.mp3'
     ];
 
-    const audioDir = path.resolve('public/assets/audio');
+    const audioDir = fs.existsSync(path.resolve('public/assets/audio'))
+      ? path.resolve('public/assets/audio')
+      : path.resolve('frontend/public/assets/audio');
     assert.ok(fs.existsSync(audioDir), 'public/assets/audio directory must exist');
 
     requiredFiles.forEach((file) => {
@@ -42,8 +44,11 @@ test('🌿 Soundscape & Audio Tracks Test Suite', async (t) => {
       assert.ok(AUDIO_SOURCES[preset].length >= 2, `${preset} sources must contain both primary and fallback files`);
 
       // Verify source URLs map to existing files in public/
+      const publicRoot = fs.existsSync(path.resolve('public'))
+        ? path.resolve('public')
+        : path.resolve('frontend/public');
       AUDIO_SOURCES[preset].forEach((url) => {
-        const localPath = path.join('public', url);
+        const localPath = path.join(publicRoot, url);
         assert.ok(fs.existsSync(localPath), `Source URL ${url} must resolve to physical file at ${localPath}`);
       });
     });

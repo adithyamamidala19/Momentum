@@ -16,7 +16,7 @@ services:
 
   api:
     build:
-      context: ./server
+      context: ./backend
       dockerfile: Dockerfile
     container_name: momentum-api
     restart: unless-stopped

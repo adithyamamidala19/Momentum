@@ -68,7 +68,7 @@ flowchart TD
 ├── docker-compose.yml          # Multi-container orchestration (API + MongoDB)
 ├── docs/                       # Architectural documentation & migration inventory
 │   └── PHASE_0_INVENTORY.md    # Legacy keys and API mapping
-├── server/                     # Backend Node/Express API Server
+├── backend/                    # Backend Node/Express API Server
 │   ├── Dockerfile              # Multi-stage hardened alpine container
 │   ├── app.js                  # Express middleware pipeline assembly
 │   ├── server.js               # HTTP server entrypoint & graceful shutdown
@@ -82,15 +82,17 @@ flowchart TD
 │   │   ├── services/           # Metrics, Challenge aggregation, AI Vision, Export
 │   │   └── utils/              # Pino logger, magic-byte validator
 │   └── tests/                  # Node native test suites (security, metrics, deletion)
-├── src/                        # Frontend React 19 Application
-│   ├── components/             # Reusable UI widgets, modals, layout, soundscapes
-│   ├── context/                # In-memory AuthContext and MomentumContext
-│   ├── pages/                  # Route views (Today, To-Dos, Voice, Rituals, Focus, etc.)
-│   ├── services/               # apiClient.js, firebaseClient.js, storagePurge.js
-│   ├── motionConfig.js         # Apple/Awwwards-grade motion curves and springs
-│   ├── App.jsx                 # View router and layout shell
-│   └── main.jsx                # Application bootstrapper with storage purge
-├── tests/                      # Frontend unit & storage leak audit tests
+├── frontend/                   # Frontend React 19 Application
+│   ├── src/
+│   │   ├── components/         # Reusable UI widgets, modals, layout, soundscapes
+│   │   ├── context/            # In-memory AuthContext and MomentumContext
+│   │   ├── pages/              # Route views (Today, To-Dos, Voice, Rituals, Focus, etc.)
+│   │   ├── services/           # apiClient.js, firebaseClient.js, storagePurge.js
+│   │   ├── motionConfig.js     # Apple/Awwwards-grade motion curves and springs
+│   │   ├── App.jsx             # View router and layout shell
+│   │   └── main.jsx            # Application bootstrapper with storage purge
+│   ├── public/                 # Soundscape audio assets and icons
+│   └── tests/                  # Frontend unit & storage leak audit tests
 ├── SECURITY_REPORT.md          # Threat model & vulnerability scan findings
 ├── UI_AUDIT.md                 # Accessibility & motion design evaluation
 └── LAUNCH_CHECKLIST.md         # Production deployment runbook
@@ -109,33 +111,32 @@ flowchart TD
 Copy the environment template files and provide your secrets:
 ```bash
 # Frontend environment
-cp .env.example .env
+cp frontend/.env.example frontend/.env
 
 # Backend server environment
-cp server/.env.example server/.env
+cp backend/.env.example backend/.env
 ```
 
 ### 3. Install Dependencies
 ```bash
 # Install frontend dependencies
-npm install
+cd frontend && npm install && cd ..
 
-# Install server dependencies
-cd server && npm install && cd ..
+# Install backend dependencies
+cd backend && npm install && cd ..
 ```
 
 ### 4. Running the Development Environment
 Run backend API server:
 ```bash
-cd server
-npm run dev
-# Starts on http://localhost:5000
+npm run backend:dev
+# Or: cd backend && npm run dev (Starts on http://localhost:5000)
 ```
 
 In a separate terminal, run the Vite frontend:
 ```bash
-npm run dev
-# Starts on http://localhost:3000
+npm run frontend
+# Or: cd frontend && npm run dev (Starts on http://localhost:3000)
 ```
 
 ### 5. Running with Docker Compose
@@ -148,15 +149,16 @@ docker-compose up --build
 ## 🧪 Testing & Verification
 
 ```bash
-# 1. Run client unit tests & storage leak verification (AST check)
+# 1. Run all tests (frontend + backend) from root
 npm test
 
-# 2. Run server API, security, and timezone calculation tests
-cd server && npm test
+# 2. Or run test suites individually
+npm run test:frontend
+npm run test:backend
 
 # 3. Security audits (Zero vulnerabilities)
-npm audit
-cd server && npm audit
+cd frontend && npm audit
+cd backend && npm audit
 
 # 4. Production build
 npm run build

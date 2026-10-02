@@ -251,7 +251,11 @@ applySeamlessLoop(reliefL, sampleRate, 1.2);
 applySeamlessLoop(reliefR, sampleRate, 1.2);
 
 // Write files to public/assets/audio/
-const audioDir = path.resolve('public/assets/audio');
+const audioDir = fs.existsSync(path.resolve('public/assets/audio'))
+  ? path.resolve('public/assets/audio')
+  : (fs.existsSync(path.resolve('frontend/public/assets/audio'))
+      ? path.resolve('frontend/public/assets/audio')
+      : path.resolve('public/assets/audio'));
 if (!fs.existsSync(audioDir)) {
   fs.mkdirSync(audioDir, { recursive: true });
 }

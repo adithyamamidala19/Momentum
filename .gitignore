@@ -1,21 +1,25 @@
 # Dependencies
 node_modules/
+frontend/node_modules/
+backend/node_modules/
 package-lock.json
 
 # Production build outputs
 dist/
+frontend/dist/
+backend/dist/
 build/
 
 # Environment and secrets
 .env
 .env.*
 !.env.example
-client/.env
-client/.env.*
-!client/.env.example
-server/.env
-server/.env.*
-!server/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 *.pem
 *.key
 service-account*.json

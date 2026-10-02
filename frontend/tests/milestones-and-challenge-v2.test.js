@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { isUsernameTaken, USERNAME_TAKEN_MESSAGE } from '../server/src/utils/usernameValidation.js';
+import { isUsernameTaken, USERNAME_TAKEN_MESSAGE } from '../../backend/src/utils/usernameValidation.js';
 import { TIER_CONFIG, getTierMaterialProps, createMedalEdgeTexture } from '../src/components/medals/medalTextures.js';
 
 describe('🌿 Prevent Duplicate Usernames (Case-Insensitive Uniqueness)', () => {

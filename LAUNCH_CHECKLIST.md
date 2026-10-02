@@ -14,7 +14,7 @@ This document provides a verified, step-by-step operational checklist for deploy
   - Role: `readWrite` on `momentum` database.
   - Generate a 32+ character high-entropy password.
 - [ ] Build Production Indexes:
-  - Run `npm run create-indexes` in `server/` to instantiate compound unique indexes:
+  - Run `npm run create-indexes` in `backend/` to instantiate compound unique indexes:
     - `users`: `{ email: 1 }`, `{ firebaseUid: 1 }`
     - `ritualLogs`: `{ user: 1, date: 1, ritual: 1 }`
     - `weeklyScores`: `{ weekId: 1, score: -1 }`
@@ -35,7 +35,7 @@ This document provides a verified, step-by-step operational checklist for deploy
 
 ## 2. Environment Variables Verification
 
-### Server (`server/.env`)
+### Server (`backend/.env`)
 | Variable | Value Requirement | Checked |
 | :--- | :--- | :---: |
 | `NODE_ENV` | `production` | [ ] |
@@ -48,7 +48,7 @@ This document provides a verified, step-by-step operational checklist for deploy
 | `FIREBASE_PRIVATE_KEY` | Exact PEM formatted string including `\n` | [ ] |
 | `GEMINI_API_KEY` | Server-side Gemini API key | [ ] |
 
-### Client (`.env.production`)
+### Client (`frontend/.env.production`)
 | Variable | Value Requirement | Checked |
 | :--- | :--- | :---: |
 | `VITE_API_URL` | `https://api.momentum.app` (leave empty if reverse-proxied) | [ ] |
@@ -63,22 +63,22 @@ This document provides a verified, step-by-step operational checklist for deploy
 
 - [ ] **Run Pre-Flight CI Checks Locally:**
   ```bash
-  # 1. Run client unit & storage audit tests
+  # 1. Run all unit & storage audit tests
   npm test
-  # 2. Run server API & security tests
-  cd server && npm test
+  # 2. Run backend API & security tests individually
+  npm run test:backend
   # 3. Check for security vulnerabilities
   npm audit
   # 4. Verify clean production build
   npm run build
   ```
 - [ ] **Deploy Backend Server:**
-  - Build Docker container: `docker build -t momentum-api server/`
+  - Build Docker container: `docker build -t momentum-api backend/`
   - Deploy to host (Render / Fly.io / GCP Cloud Run / AWS ECS).
   - Verify container health check passes: `GET /api/health` -> `200 {"status":"ok"}`.
   - Verify database readiness probe: `GET /api/ready` -> `200 {"status":"ready","database":"connected"}`.
 - [ ] **Deploy Frontend Client:**
-  - Deploy `dist/` directory to static CDN (Vercel / Cloudflare Pages / Firebase Hosting).
+  - Deploy `frontend/dist/` directory to static CDN (Vercel / Cloudflare Pages / Firebase Hosting).
   - Configure SPA rewrite: all paths redirect to `index.html`.
 
 ---

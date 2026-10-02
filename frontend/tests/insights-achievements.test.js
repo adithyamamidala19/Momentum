@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ACHIEVEMENT_DEFINITIONS, AchievementService } from '../server/src/services/achievementService.js';
+import { DEFAULT_ACHIEVEMENT_DEFINITIONS, AchievementService } from '../../backend/src/services/achievementService.js';
 import { getTierMaterialProps } from '../src/components/medals/medalTextures.js';
 
 test('🌿 1. Achievement Definitions Seed Integrity', () => {

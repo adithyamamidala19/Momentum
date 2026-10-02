@@ -21,25 +21,28 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Client Dependencies
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
         run: npm ci
 
-      - name: Install Server Dependencies
-        working-directory: ./server
+      - name: Install Backend Dependencies
+        working-directory: ./backend
         run: npm ci
 
-      - name: Run Client Unit & Storage Leak Audit Tests
+      - name: Run Frontend Unit & Storage Leak Audit Tests
+        working-directory: ./frontend
         run: npm test
 
-      - name: Run Server API & Security Tests
-        working-directory: ./server
+      - name: Run Backend API & Security Tests
+        working-directory: ./backend
         run: npm test
 
-      - name: Security Vulnerability Audit (Client)
+      - name: Security Vulnerability Audit (Frontend)
+        working-directory: ./frontend
         run: npm audit
 
-      - name: Security Vulnerability Audit (Server)
-        working-directory: ./server
+      - name: Security Vulnerability Audit (Backend)
+        working-directory: ./backend
         run: npm audit
 
       - name: Verify Zero-Secret Leakage
@@ -49,5 +52,6 @@ jobs:
             echo "Environment files properly ignored."
           fi
 
-      - name: Build Production Client
+      - name: Build Production Frontend
+        working-directory: ./frontend
         run: npm run build

@@ -11,7 +11,7 @@
  */
 
 import dotenv from 'dotenv';
-dotenv.config({ path: 'server/.env' });
+dotenv.config({ path: 'backend/.env' });
 dotenv.config();
 
 import http from 'http';

@@ -6,7 +6,9 @@ import { purgeLegacyClientStorage } from '../src/services/storagePurge.js';
 
 describe('Storage Leak Audit & Zero-Client-Persistence Verification', () => {
   test('Scans all src/ files to ensure zero calls to localStorage, sessionStorage, or indexedDB outside purge', () => {
-    const srcDir = path.resolve('src');
+    const srcDir = fs.existsSync(path.resolve('src')) 
+      ? path.resolve('src') 
+      : path.resolve('frontend/src');
     const forbiddenPatterns = [
       /\blocalStorage\./,
       /\bsessionStorage\./,
